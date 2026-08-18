@@ -1,0 +1,19 @@
+Image_name,Patient_num,Brain_plane,image_path,anomaly_score,threshold,threshold_ratio,is_outlier,status
+Patient01275_Plane3_1_of_7,1275,Trans-ventricular,D:\Fetal_Dataset\Images\Patient01275_Plane3_1_of_7.png,19.8213,14.4595,1.3708,True,Unusual / Outlier
+Patient00904_Plane3_4_of_4,904,Trans-thalamic,D:\Fetal_Dataset\Images\Patient00904_Plane3_4_of_4.png,18.0014,14.6963,1.2249,True,Unusual / Outlier
+Patient01349_Plane3_3_of_3,1349,Trans-cerebellum,D:\Fetal_Dataset\Images\Patient01349_Plane3_3_of_3.png,16.3203,13.3816,1.2196,True,Unusual / Outlier
+Patient00305_Plane3_1_of_5,305,Trans-ventricular,D:\Fetal_Dataset\Images\Patient00305_Plane3_1_of_5.png,17.633,14.4595,1.2195,True,Unusual / Outlier
+Patient01013_Plane3_3_of_4,1013,Trans-cerebellum,D:\Fetal_Dataset\Images\Patient01013_Plane3_3_of_4.png,16.2995,13.3816,1.2181,True,Unusual / Outlier
+Patient01275_Plane3_3_of_7,1275,Trans-thalamic,D:\Fetal_Dataset\Images\Patient01275_Plane3_3_of_7.png,17.2549,14.6963,1.1741,True,Unusual / Outlier
+Patient01626_Plane3_2_of_2,1626,Trans-thalamic,D:\Fetal_Dataset\Images\Patient01626_Plane3_2_of_2.png,16.8904,14.6963,1.1493,True,Unusual / Outlier
+Patient01232_Plane3_2_of_4,1232,Trans-ventricular,D:\Fetal_Dataset\Images\Patient01232_Plane3_2_of_4.png,16.126,14.4595,1.1153,True,Unusual / Outlier
+Patient00700_Plane3_2_of_2,700,Trans-ventricular,D:\Fetal_Dataset\Images\Patient00700_Plane3_2_of_2.png,15.918,14.4595,1.1009,True,Unusual / Outlier
+Patient01710_Plane3_2_of_5,1710,Trans-cerebellum,D:\Fetal_Dataset\Images\Patient01710_Plane3_2_of_5.png,14.5918,13.3816,1.0904,True,Unusual / Outlier
+Patient01328_Plane3_1_of_4,1328,Trans-ventricular,D:\Fetal_Dataset\Images\Patient01328_Plane3_1_of_4.png,15.4819,14.4595,1.0707,True,Unusual / Outlier
+Patient01300_Plane3_3_of_6,1300,Trans-cerebellum,D:\Fetal_Dataset\Images\Patient01300_Plane3_3_of_6.png,14.2801,13.3816,1.0671,True,Unusual / Outlier
+Patient01075_Plane3_2_of_4,1075,Trans-thalamic,D:\Fetal_Dataset\Images\Patient01075_Plane3_2_of_4.png,15.315,14.6963,1.0421,True,Unusual / Outlier
+Patient00765_Plane3_4_of_6,765,Trans-thalamic,D:\Fetal_Dataset\Images\Patient00765_Plane3_4_of_6.png,15.2597,14.6963,1.0383,True,Unusual / Outlier
+Patient01509_Plane3_1_of_2,1509,Trans-thalamic,D:\Fetal_Dataset\Images\Patient01509_Plane3_1_of_2.png,14.8348,14.6963,1.0094,True,Unusual / Outlier
+Patient01710_Plane3_3_of_5,1710,Trans-thalamic,D:\Fetal_Dataset\Images\Patient01710_Plane3_3_of_5.png,14.8215,14.6963,1.0085,True,Unusual / Outlier
+Patient01135_Plane3_2_of_3,1135,Trans-ventricular,D:\Fetal_Dataset\Images\Patient01135_Plane3_2_of_3.png,14.5479,14.4595,1.0061,True,Unusual / Outlier
+Patient00904_Plane3_2_of_4,904,Trans-cerebellum,D:\Fetal_Dataset\Images\Patient00904_Plane3_2_of_4.png,13.3917,13.3816,1.0008,True,Unusual / Outlier

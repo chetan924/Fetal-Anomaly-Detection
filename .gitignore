@@ -1,0 +1,47 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# Database
+*.sqlite3
+*.db
+
+# IDE
+.vscode/
+.idea/
+
+# Frontend
+node_modules/
+dist/
+
+# Backend runtime storage
+backend/storage/
+backend/storage/**
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# ML dataset
+Images/
+
+# Development backups
+*.backup.jsx
+*.backup.js
+
+# Development backup files
+*backup.jsx

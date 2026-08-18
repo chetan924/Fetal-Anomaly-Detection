@@ -1,0 +1,467 @@
+Image_name,Patient_num,Plane,Brain_plane,Operator,US_Machine,Train ,image_path
+Patient00216_Plane3_1_of_5,216,Fetal brain,Trans-thalamic,Other,Voluson E6,1,D:\Fetal_Dataset\Images\Patient00216_Plane3_1_of_5.png
+Patient00216_Plane3_2_of_5,216,Fetal brain,Trans-ventricular,Other,Voluson E6,1,D:\Fetal_Dataset\Images\Patient00216_Plane3_2_of_5.png
+Patient00216_Plane3_3_of_5,216,Fetal brain,Trans-thalamic,Other,Voluson E6,1,D:\Fetal_Dataset\Images\Patient00216_Plane3_3_of_5.png
+Patient00216_Plane3_4_of_5,216,Fetal brain,Trans-cerebellum,Other,Voluson E6,1,D:\Fetal_Dataset\Images\Patient00216_Plane3_4_of_5.png
+Patient00216_Plane3_5_of_5,216,Fetal brain,Trans-thalamic,Other,Voluson E6,1,D:\Fetal_Dataset\Images\Patient00216_Plane3_5_of_5.png
+Patient00305_Plane3_1_of_5,305,Fetal brain,Trans-ventricular,Other,Voluson S10,1,D:\Fetal_Dataset\Images\Patient00305_Plane3_1_of_5.png
+Patient00305_Plane3_2_of_5,305,Fetal brain,Trans-thalamic,Other,Voluson S10,1,D:\Fetal_Dataset\Images\Patient00305_Plane3_2_of_5.png
+Patient00305_Plane3_3_of_5,305,Fetal brain,Trans-thalamic,Other,Voluson S10,1,D:\Fetal_Dataset\Images\Patient00305_Plane3_3_of_5.png
+Patient00305_Plane3_4_of_5,305,Fetal brain,Trans-cerebellum,Other,Voluson S10,1,D:\Fetal_Dataset\Images\Patient00305_Plane3_4_of_5.png
+Patient00305_Plane3_5_of_5,305,Fetal brain,Trans-thalamic,Other,Voluson S10,1,D:\Fetal_Dataset\Images\Patient00305_Plane3_5_of_5.png
+Patient00641_Plane3_1_of_1,641,Fetal brain,Trans-thalamic,Other,Other,0,D:\Fetal_Dataset\Images\Patient00641_Plane3_1_of_1.png
+Patient00643_Plane3_1_of_1,643,Fetal brain,Trans-thalamic,Other,Other,0,D:\Fetal_Dataset\Images\Patient00643_Plane3_1_of_1.png
+Patient00655_Plane3_1_of_1,655,Fetal brain,Trans-thalamic,Other,Other,0,D:\Fetal_Dataset\Images\Patient00655_Plane3_1_of_1.png
+Patient00658_Plane3_1_of_1,658,Fetal brain,Trans-thalamic,Other,Other,0,D:\Fetal_Dataset\Images\Patient00658_Plane3_1_of_1.png
+Patient00666_Plane3_1_of_1,666,Fetal brain,Trans-thalamic,Other,Other,1,D:\Fetal_Dataset\Images\Patient00666_Plane3_1_of_1.png
+Patient00699_Plane3_1_of_4,699,Fetal brain,Trans-thalamic,Op. 1,Voluson E6,1,D:\Fetal_Dataset\Images\Patient00699_Plane3_1_of_4.png
+Patient00699_Plane3_2_of_4,699,Fetal brain,Trans-thalamic,Op. 1,Voluson E6,1,D:\Fetal_Dataset\Images\Patient00699_Plane3_2_of_4.png
+Patient00699_Plane3_3_of_4,699,Fetal brain,Trans-ventricular,Op. 1,Voluson E6,1,D:\Fetal_Dataset\Images\Patient00699_Plane3_3_of_4.png
+Patient00699_Plane3_4_of_4,699,Fetal brain,Trans-thalamic,Op. 1,Voluson E6,1,D:\Fetal_Dataset\Images\Patient00699_Plane3_4_of_4.png
+Patient00700_Plane3_1_of_2,700,Fetal brain,Trans-thalamic,Op. 1,Voluson E6,1,D:\Fetal_Dataset\Images\Patient00700_Plane3_1_of_2.png
+Patient00700_Plane3_2_of_2,700,Fetal brain,Trans-ventricular,Op. 1,Voluson E6,1,D:\Fetal_Dataset\Images\Patient00700_Plane3_2_of_2.png
+Patient00704_Plane3_1_of_5,704,Fetal brain,Trans-thalamic,Op. 1,Voluson E6,1,D:\Fetal_Dataset\Images\Patient00704_Plane3_1_of_5.png
+Patient00704_Plane3_2_of_5,704,Fetal brain,Trans-cerebellum,Op. 1,Voluson E6,1,D:\Fetal_Dataset\Images\Patient00704_Plane3_2_of_5.png
+Patient00704_Plane3_3_of_5,704,Fetal brain,Trans-thalamic,Op. 1,Voluson E6,1,D:\Fetal_Dataset\Images\Patient00704_Plane3_3_of_5.png
+Patient00704_Plane3_4_of_5,704,Fetal brain,Trans-ventricular,Op. 1,Voluson E6,1,D:\Fetal_Dataset\Images\Patient00704_Plane3_4_of_5.png
+Patient00704_Plane3_5_of_5,704,Fetal brain,Trans-thalamic,Op. 1,Voluson E6,1,D:\Fetal_Dataset\Images\Patient00704_Plane3_5_of_5.png
+Patient00706_Plane3_1_of_5,706,Fetal brain,Trans-thalamic,Op. 1,Voluson E6,1,D:\Fetal_Dataset\Images\Patient00706_Plane3_1_of_5.png
+Patient00706_Plane3_2_of_5,706,Fetal brain,Trans-thalamic,Op. 1,Voluson E6,1,D:\Fetal_Dataset\Images\Patient00706_Plane3_2_of_5.png
+Patient00706_Plane3_3_of_5,706,Fetal brain,Trans-thalamic,Op. 1,Voluson E6,1,D:\Fetal_Dataset\Images\Patient00706_Plane3_3_of_5.png
+Patient00706_Plane3_4_of_5,706,Fetal brain,Trans-thalamic,Op. 1,Voluson E6,1,D:\Fetal_Dataset\Images\Patient00706_Plane3_4_of_5.png
+Patient00706_Plane3_5_of_5,706,Fetal brain,Trans-cerebellum,Op. 1,Voluson E6,1,D:\Fetal_Dataset\Images\Patient00706_Plane3_5_of_5.png
+Patient00711_Plane3_1_of_1,711,Fetal brain,Trans-thalamic,Op. 2,Voluson E6,1,D:\Fetal_Dataset\Images\Patient00711_Plane3_1_of_1.png
+Patient00712_Plane3_1_of_4,712,Fetal brain,Trans-thalamic,Op. 2,Voluson E6,1,D:\Fetal_Dataset\Images\Patient00712_Plane3_1_of_4.png
+Patient00712_Plane3_2_of_4,712,Fetal brain,Trans-thalamic,Op. 2,Voluson E6,1,D:\Fetal_Dataset\Images\Patient00712_Plane3_2_of_4.png
+Patient00712_Plane3_3_of_4,712,Fetal brain,Trans-cerebellum,Op. 2,Voluson E6,1,D:\Fetal_Dataset\Images\Patient00712_Plane3_3_of_4.png
+Patient00712_Plane3_4_of_4,712,Fetal brain,Trans-cerebellum,Op. 1,Voluson E6,1,D:\Fetal_Dataset\Images\Patient00712_Plane3_4_of_4.png
+Patient00713_Plane3_1_of_4,713,Fetal brain,Trans-cerebellum,Op. 1,Voluson E6,1,D:\Fetal_Dataset\Images\Patient00713_Plane3_1_of_4.png
+Patient00713_Plane3_2_of_4,713,Fetal brain,Trans-thalamic,Op. 1,Voluson E6,1,D:\Fetal_Dataset\Images\Patient00713_Plane3_2_of_4.png
+Patient00713_Plane3_3_of_4,713,Fetal brain,Trans-thalamic,Op. 1,Voluson E6,1,D:\Fetal_Dataset\Images\Patient00713_Plane3_3_of_4.png
+Patient00713_Plane3_4_of_4,713,Fetal brain,Trans-thalamic,Op. 1,Voluson E6,1,D:\Fetal_Dataset\Images\Patient00713_Plane3_4_of_4.png
+Patient00718_Plane3_1_of_5,718,Fetal brain,Trans-thalamic,Op. 1,Voluson E6,1,D:\Fetal_Dataset\Images\Patient00718_Plane3_1_of_5.png
+Patient00718_Plane3_2_of_5,718,Fetal brain,Trans-thalamic,Op. 1,Voluson E6,1,D:\Fetal_Dataset\Images\Patient00718_Plane3_2_of_5.png
+Patient00718_Plane3_3_of_5,718,Fetal brain,Trans-thalamic,Op. 1,Voluson E6,1,D:\Fetal_Dataset\Images\Patient00718_Plane3_3_of_5.png
+Patient00718_Plane3_4_of_5,718,Fetal brain,Trans-thalamic,Op. 1,Voluson E6,1,D:\Fetal_Dataset\Images\Patient00718_Plane3_4_of_5.png
+Patient00718_Plane3_5_of_5,718,Fetal brain,Trans-cerebellum,Op. 1,Voluson E6,1,D:\Fetal_Dataset\Images\Patient00718_Plane3_5_of_5.png
+Patient00719_Plane3_1_of_2,719,Fetal brain,Trans-thalamic,Op. 3,Aloka,1,D:\Fetal_Dataset\Images\Patient00719_Plane3_1_of_2.png
+Patient00719_Plane3_2_of_2,719,Fetal brain,Trans-thalamic,Op. 3,Aloka,1,D:\Fetal_Dataset\Images\Patient00719_Plane3_2_of_2.png
+Patient00723_Plane3_1_of_4,723,Fetal brain,Trans-thalamic,Op. 1,Voluson E6,1,D:\Fetal_Dataset\Images\Patient00723_Plane3_1_of_4.png
+Patient00723_Plane3_2_of_4,723,Fetal brain,Trans-thalamic,Op. 1,Voluson E6,1,D:\Fetal_Dataset\Images\Patient00723_Plane3_2_of_4.png
+Patient00723_Plane3_3_of_4,723,Fetal brain,Trans-ventricular,Op. 1,Voluson E6,1,D:\Fetal_Dataset\Images\Patient00723_Plane3_3_of_4.png
+Patient00723_Plane3_4_of_4,723,Fetal brain,Trans-thalamic,Op. 1,Voluson E6,1,D:\Fetal_Dataset\Images\Patient00723_Plane3_4_of_4.png
+Patient00734_Plane3_1_of_1,734,Fetal brain,Trans-thalamic,Op. 1,Voluson E6,1,D:\Fetal_Dataset\Images\Patient00734_Plane3_1_of_1.png
+Patient00737_Plane3_1_of_2,737,Fetal brain,Trans-ventricular,Op. 1,Voluson E6,1,D:\Fetal_Dataset\Images\Patient00737_Plane3_1_of_2.png
+Patient00737_Plane3_2_of_2,737,Fetal brain,Trans-ventricular,Op. 1,Voluson E6,1,D:\Fetal_Dataset\Images\Patient00737_Plane3_2_of_2.png
+Patient00739_Plane3_1_of_3,739,Fetal brain,Trans-thalamic,Op. 3,Aloka,1,D:\Fetal_Dataset\Images\Patient00739_Plane3_1_of_3.png
+Patient00739_Plane3_2_of_3,739,Fetal brain,Trans-thalamic,Op. 3,Aloka,1,D:\Fetal_Dataset\Images\Patient00739_Plane3_2_of_3.png
+Patient00739_Plane3_3_of_3,739,Fetal brain,Trans-thalamic,Op. 3,Aloka,1,D:\Fetal_Dataset\Images\Patient00739_Plane3_3_of_3.png
+Patient00744_Plane3_1_of_2,744,Fetal brain,Trans-cerebellum,Op. 2,Voluson E6,1,D:\Fetal_Dataset\Images\Patient00744_Plane3_1_of_2.png
+Patient00744_Plane3_2_of_2,744,Fetal brain,Trans-thalamic,Op. 2,Voluson E6,1,D:\Fetal_Dataset\Images\Patient00744_Plane3_2_of_2.png
+Patient00745_Plane3_1_of_3,745,Fetal brain,Trans-thalamic,Op. 1,Voluson E6,1,D:\Fetal_Dataset\Images\Patient00745_Plane3_1_of_3.png
+Patient00745_Plane3_2_of_3,745,Fetal brain,Trans-thalamic,Op. 1,Voluson E6,1,D:\Fetal_Dataset\Images\Patient00745_Plane3_2_of_3.png
+Patient00745_Plane3_3_of_3,745,Fetal brain,Trans-thalamic,Op. 1,Voluson E6,1,D:\Fetal_Dataset\Images\Patient00745_Plane3_3_of_3.png
+Patient00754_Plane3_1_of_3,754,Fetal brain,Trans-thalamic,Op. 3,Aloka,1,D:\Fetal_Dataset\Images\Patient00754_Plane3_1_of_3.png
+Patient00754_Plane3_2_of_3,754,Fetal brain,Trans-cerebellum,Op. 3,Aloka,1,D:\Fetal_Dataset\Images\Patient00754_Plane3_2_of_3.png
+Patient00754_Plane3_3_of_3,754,Fetal brain,Trans-thalamic,Op. 3,Aloka,1,D:\Fetal_Dataset\Images\Patient00754_Plane3_3_of_3.png
+Patient00757_Plane3_1_of_3,757,Fetal brain,Trans-thalamic,Op. 1,Voluson E6,1,D:\Fetal_Dataset\Images\Patient00757_Plane3_1_of_3.png
+Patient00757_Plane3_2_of_3,757,Fetal brain,Trans-thalamic,Op. 1,Voluson E6,1,D:\Fetal_Dataset\Images\Patient00757_Plane3_2_of_3.png
+Patient00757_Plane3_3_of_3,757,Fetal brain,Trans-thalamic,Op. 1,Voluson E6,1,D:\Fetal_Dataset\Images\Patient00757_Plane3_3_of_3.png
+Patient00765_Plane3_1_of_6,765,Fetal brain,Trans-ventricular,Op. 2,Voluson E6,1,D:\Fetal_Dataset\Images\Patient00765_Plane3_1_of_6.png
+Patient00765_Plane3_2_of_6,765,Fetal brain,Trans-cerebellum,Op. 2,Voluson E6,1,D:\Fetal_Dataset\Images\Patient00765_Plane3_2_of_6.png
+Patient00765_Plane3_3_of_6,765,Fetal brain,Trans-cerebellum,Op. 2,Voluson E6,1,D:\Fetal_Dataset\Images\Patient00765_Plane3_3_of_6.png
+Patient00765_Plane3_4_of_6,765,Fetal brain,Trans-thalamic,Op. 2,Voluson E6,1,D:\Fetal_Dataset\Images\Patient00765_Plane3_4_of_6.png
+Patient00765_Plane3_5_of_6,765,Fetal brain,Trans-thalamic,Op. 2,Voluson E6,1,D:\Fetal_Dataset\Images\Patient00765_Plane3_5_of_6.png
+Patient00765_Plane3_6_of_6,765,Fetal brain,Trans-thalamic,Op. 2,Voluson E6,1,D:\Fetal_Dataset\Images\Patient00765_Plane3_6_of_6.png
+Patient00784_Plane3_1_of_2,784,Fetal brain,Trans-thalamic,Op. 1,Voluson E6,1,D:\Fetal_Dataset\Images\Patient00784_Plane3_1_of_2.png
+Patient00784_Plane3_2_of_2,784,Fetal brain,Trans-thalamic,Op. 1,Voluson E6,1,D:\Fetal_Dataset\Images\Patient00784_Plane3_2_of_2.png
+Patient00808_Plane3_1_of_2,808,Fetal brain,Trans-thalamic,Op. 1,Voluson E6,1,D:\Fetal_Dataset\Images\Patient00808_Plane3_1_of_2.png
+Patient00808_Plane3_2_of_2,808,Fetal brain,Trans-thalamic,Op. 1,Voluson E6,1,D:\Fetal_Dataset\Images\Patient00808_Plane3_2_of_2.png
+Patient00828_Plane3_1_of_1,828,Fetal brain,Trans-ventricular,Op. 2,Voluson E6,1,D:\Fetal_Dataset\Images\Patient00828_Plane3_1_of_1.png
+Patient00832_Plane3_1_of_3,832,Fetal brain,Trans-cerebellum,Op. 3,Aloka,1,D:\Fetal_Dataset\Images\Patient00832_Plane3_1_of_3.png
+Patient00832_Plane3_2_of_3,832,Fetal brain,Trans-ventricular,Op. 3,Aloka,1,D:\Fetal_Dataset\Images\Patient00832_Plane3_2_of_3.png
+Patient00832_Plane3_3_of_3,832,Fetal brain,Trans-thalamic,Op. 3,Aloka,1,D:\Fetal_Dataset\Images\Patient00832_Plane3_3_of_3.png
+Patient00834_Plane3_1_of_3,834,Fetal brain,Trans-thalamic,Op. 3,Aloka,1,D:\Fetal_Dataset\Images\Patient00834_Plane3_1_of_3.png
+Patient00834_Plane3_2_of_3,834,Fetal brain,Trans-ventricular,Op. 3,Aloka,1,D:\Fetal_Dataset\Images\Patient00834_Plane3_2_of_3.png
+Patient00834_Plane3_3_of_3,834,Fetal brain,Trans-cerebellum,Op. 3,Aloka,1,D:\Fetal_Dataset\Images\Patient00834_Plane3_3_of_3.png
+Patient00842_Plane3_1_of_2,842,Fetal brain,Trans-thalamic,Op. 1,Voluson E6,1,D:\Fetal_Dataset\Images\Patient00842_Plane3_1_of_2.png
+Patient00842_Plane3_2_of_2,842,Fetal brain,Trans-thalamic,Op. 1,Voluson E6,1,D:\Fetal_Dataset\Images\Patient00842_Plane3_2_of_2.png
+Patient00849_Plane3_1_of_3,849,Fetal brain,Trans-thalamic,Op. 2,Voluson E6,1,D:\Fetal_Dataset\Images\Patient00849_Plane3_1_of_3.png
+Patient00849_Plane3_3_of_3,849,Fetal brain,Trans-thalamic,Op. 2,Voluson E6,1,D:\Fetal_Dataset\Images\Patient00849_Plane3_3_of_3.png
+Patient00850_Plane3_1_of_4,850,Fetal brain,Trans-thalamic,Op. 2,Voluson E6,1,D:\Fetal_Dataset\Images\Patient00850_Plane3_1_of_4.png
+Patient00850_Plane3_2_of_4,850,Fetal brain,Trans-cerebellum,Op. 2,Voluson E6,1,D:\Fetal_Dataset\Images\Patient00850_Plane3_2_of_4.png
+Patient00850_Plane3_3_of_4,850,Fetal brain,Trans-thalamic,Op. 2,Voluson E6,1,D:\Fetal_Dataset\Images\Patient00850_Plane3_3_of_4.png
+Patient00850_Plane3_4_of_4,850,Fetal brain,Trans-thalamic,Op. 1,Voluson E6,1,D:\Fetal_Dataset\Images\Patient00850_Plane3_4_of_4.png
+Patient00855_Plane3_1_of_3,855,Fetal brain,Trans-ventricular,Op. 3,Aloka,1,D:\Fetal_Dataset\Images\Patient00855_Plane3_1_of_3.png
+Patient00855_Plane3_2_of_3,855,Fetal brain,Trans-ventricular,Op. 3,Aloka,1,D:\Fetal_Dataset\Images\Patient00855_Plane3_2_of_3.png
+Patient00855_Plane3_3_of_3,855,Fetal brain,Trans-cerebellum,Op. 3,Aloka,1,D:\Fetal_Dataset\Images\Patient00855_Plane3_3_of_3.png
+Patient00867_Plane3_1_of_3,867,Fetal brain,Trans-ventricular,Op. 3,Aloka,1,D:\Fetal_Dataset\Images\Patient00867_Plane3_1_of_3.png
+Patient00867_Plane3_2_of_3,867,Fetal brain,Trans-thalamic,Op. 3,Aloka,1,D:\Fetal_Dataset\Images\Patient00867_Plane3_2_of_3.png
+Patient00867_Plane3_3_of_3,867,Fetal brain,Trans-cerebellum,Op. 3,Aloka,1,D:\Fetal_Dataset\Images\Patient00867_Plane3_3_of_3.png
+Patient00873_Plane3_1_of_3,873,Fetal brain,Trans-thalamic,Op. 3,Aloka,1,D:\Fetal_Dataset\Images\Patient00873_Plane3_1_of_3.png
+Patient00873_Plane3_2_of_3,873,Fetal brain,Trans-cerebellum,Op. 3,Aloka,1,D:\Fetal_Dataset\Images\Patient00873_Plane3_2_of_3.png
+Patient00873_Plane3_3_of_3,873,Fetal brain,Trans-ventricular,Op. 3,Aloka,1,D:\Fetal_Dataset\Images\Patient00873_Plane3_3_of_3.png
+Patient00902_Plane3_1_of_5,902,Fetal brain,Trans-cerebellum,Op. 1,Voluson E6,1,D:\Fetal_Dataset\Images\Patient00902_Plane3_1_of_5.png
+Patient00902_Plane3_2_of_5,902,Fetal brain,Trans-cerebellum,Op. 1,Voluson E6,1,D:\Fetal_Dataset\Images\Patient00902_Plane3_2_of_5.png
+Patient00902_Plane3_3_of_5,902,Fetal brain,Trans-cerebellum,Op. 1,Voluson E6,1,D:\Fetal_Dataset\Images\Patient00902_Plane3_3_of_5.png
+Patient00902_Plane3_4_of_5,902,Fetal brain,Trans-thalamic,Op. 1,Voluson E6,1,D:\Fetal_Dataset\Images\Patient00902_Plane3_4_of_5.png
+Patient00902_Plane3_5_of_5,902,Fetal brain,Trans-cerebellum,Op. 1,Voluson E6,1,D:\Fetal_Dataset\Images\Patient00902_Plane3_5_of_5.png
+Patient00904_Plane3_1_of_4,904,Fetal brain,Trans-cerebellum,Op. 2,Voluson E6,1,D:\Fetal_Dataset\Images\Patient00904_Plane3_1_of_4.png
+Patient00904_Plane3_2_of_4,904,Fetal brain,Trans-cerebellum,Op. 2,Voluson E6,1,D:\Fetal_Dataset\Images\Patient00904_Plane3_2_of_4.png
+Patient00904_Plane3_4_of_4,904,Fetal brain,Trans-thalamic,Op. 2,Voluson E6,1,D:\Fetal_Dataset\Images\Patient00904_Plane3_4_of_4.png
+Patient00911_Plane3_1_of_3,911,Fetal brain,Trans-thalamic,Op. 3,Aloka,1,D:\Fetal_Dataset\Images\Patient00911_Plane3_1_of_3.png
+Patient00911_Plane3_2_of_3,911,Fetal brain,Trans-ventricular,Op. 3,Aloka,1,D:\Fetal_Dataset\Images\Patient00911_Plane3_2_of_3.png
+Patient00911_Plane3_3_of_3,911,Fetal brain,Trans-cerebellum,Op. 3,Aloka,1,D:\Fetal_Dataset\Images\Patient00911_Plane3_3_of_3.png
+Patient00916_Plane3_1_of_3,916,Fetal brain,Trans-thalamic,Op. 2,Voluson E6,1,D:\Fetal_Dataset\Images\Patient00916_Plane3_1_of_3.png
+Patient00916_Plane3_2_of_3,916,Fetal brain,Trans-thalamic,Op. 2,Voluson E6,1,D:\Fetal_Dataset\Images\Patient00916_Plane3_2_of_3.png
+Patient00916_Plane3_3_of_3,916,Fetal brain,Trans-thalamic,Op. 2,Voluson E6,1,D:\Fetal_Dataset\Images\Patient00916_Plane3_3_of_3.png
+Patient00929_Plane3_1_of_8,929,Fetal brain,Trans-thalamic,Op. 1,Voluson E6,1,D:\Fetal_Dataset\Images\Patient00929_Plane3_1_of_8.png
+Patient00929_Plane3_2_of_8,929,Fetal brain,Trans-thalamic,Op. 1,Voluson E6,1,D:\Fetal_Dataset\Images\Patient00929_Plane3_2_of_8.png
+Patient00929_Plane3_3_of_8,929,Fetal brain,Trans-thalamic,Op. 1,Voluson E6,1,D:\Fetal_Dataset\Images\Patient00929_Plane3_3_of_8.png
+Patient00929_Plane3_4_of_8,929,Fetal brain,Trans-ventricular,Op. 1,Voluson E6,1,D:\Fetal_Dataset\Images\Patient00929_Plane3_4_of_8.png
+Patient00929_Plane3_5_of_8,929,Fetal brain,Trans-thalamic,Op. 1,Voluson E6,1,D:\Fetal_Dataset\Images\Patient00929_Plane3_5_of_8.png
+Patient00929_Plane3_6_of_8,929,Fetal brain,Trans-ventricular,Op. 1,Voluson E6,1,D:\Fetal_Dataset\Images\Patient00929_Plane3_6_of_8.png
+Patient00929_Plane3_7_of_8,929,Fetal brain,Trans-thalamic,Op. 1,Voluson E6,1,D:\Fetal_Dataset\Images\Patient00929_Plane3_7_of_8.png
+Patient00929_Plane3_8_of_8,929,Fetal brain,Trans-thalamic,Op. 1,Voluson E6,1,D:\Fetal_Dataset\Images\Patient00929_Plane3_8_of_8.png
+Patient00933_Plane3_1_of_4,933,Fetal brain,Trans-ventricular,Op. 2,Voluson E6,1,D:\Fetal_Dataset\Images\Patient00933_Plane3_1_of_4.png
+Patient00933_Plane3_2_of_4,933,Fetal brain,Trans-thalamic,Op. 2,Voluson E6,1,D:\Fetal_Dataset\Images\Patient00933_Plane3_2_of_4.png
+Patient00933_Plane3_3_of_4,933,Fetal brain,Trans-ventricular,Op. 2,Voluson E6,1,D:\Fetal_Dataset\Images\Patient00933_Plane3_3_of_4.png
+Patient00933_Plane3_4_of_4,933,Fetal brain,Trans-cerebellum,Op. 2,Voluson E6,1,D:\Fetal_Dataset\Images\Patient00933_Plane3_4_of_4.png
+Patient00936_Plane3_1_of_1,936,Fetal brain,Trans-thalamic,Op. 1,Voluson E6,1,D:\Fetal_Dataset\Images\Patient00936_Plane3_1_of_1.png
+Patient00952_Plane3_1_of_2,952,Fetal brain,Trans-ventricular,Op. 3,Aloka,1,D:\Fetal_Dataset\Images\Patient00952_Plane3_1_of_2.png
+Patient00952_Plane3_2_of_2,952,Fetal brain,Trans-cerebellum,Op. 3,Aloka,1,D:\Fetal_Dataset\Images\Patient00952_Plane3_2_of_2.png
+Patient00956_Plane3_1_of_3,956,Fetal brain,Trans-thalamic,Op. 3,Aloka,1,D:\Fetal_Dataset\Images\Patient00956_Plane3_1_of_3.png
+Patient00956_Plane3_2_of_3,956,Fetal brain,Trans-ventricular,Op. 3,Aloka,1,D:\Fetal_Dataset\Images\Patient00956_Plane3_2_of_3.png
+Patient00956_Plane3_3_of_3,956,Fetal brain,Trans-ventricular,Op. 3,Aloka,1,D:\Fetal_Dataset\Images\Patient00956_Plane3_3_of_3.png
+Patient00968_Plane3_1_of_1,968,Fetal brain,Trans-thalamic,Op. 1,Voluson E6,1,D:\Fetal_Dataset\Images\Patient00968_Plane3_1_of_1.png
+Patient00970_Plane3_1_of_4,970,Fetal brain,Trans-thalamic,Op. 1,Voluson E6,1,D:\Fetal_Dataset\Images\Patient00970_Plane3_1_of_4.png
+Patient00970_Plane3_2_of_4,970,Fetal brain,Trans-thalamic,Op. 1,Voluson E6,1,D:\Fetal_Dataset\Images\Patient00970_Plane3_2_of_4.png
+Patient00970_Plane3_3_of_4,970,Fetal brain,Trans-ventricular,Op. 1,Voluson E6,1,D:\Fetal_Dataset\Images\Patient00970_Plane3_3_of_4.png
+Patient00970_Plane3_4_of_4,970,Fetal brain,Trans-thalamic,Op. 1,Voluson E6,1,D:\Fetal_Dataset\Images\Patient00970_Plane3_4_of_4.png
+Patient00971_Plane3_1_of_2,971,Fetal brain,Trans-ventricular,Op. 2,Voluson E6,1,D:\Fetal_Dataset\Images\Patient00971_Plane3_1_of_2.png
+Patient00971_Plane3_2_of_2,971,Fetal brain,Trans-cerebellum,Op. 2,Voluson E6,1,D:\Fetal_Dataset\Images\Patient00971_Plane3_2_of_2.png
+Patient00981_Plane3_1_of_3,981,Fetal brain,Trans-cerebellum,Op. 2,Voluson E6,1,D:\Fetal_Dataset\Images\Patient00981_Plane3_1_of_3.png
+Patient00981_Plane3_2_of_3,981,Fetal brain,Trans-ventricular,Op. 2,Voluson E6,1,D:\Fetal_Dataset\Images\Patient00981_Plane3_2_of_3.png
+Patient00990_Plane3_1_of_3,990,Fetal brain,Trans-thalamic,Op. 2,Voluson E6,1,D:\Fetal_Dataset\Images\Patient00990_Plane3_1_of_3.png
+Patient00990_Plane3_2_of_3,990,Fetal brain,Trans-thalamic,Op. 2,Voluson E6,1,D:\Fetal_Dataset\Images\Patient00990_Plane3_2_of_3.png
+Patient00990_Plane3_3_of_3,990,Fetal brain,Trans-cerebellum,Op. 2,Voluson E6,1,D:\Fetal_Dataset\Images\Patient00990_Plane3_3_of_3.png
+Patient00998_Plane3_1_of_2,998,Fetal brain,Trans-thalamic,Op. 2,Voluson E6,1,D:\Fetal_Dataset\Images\Patient00998_Plane3_1_of_2.png
+Patient00998_Plane3_2_of_2,998,Fetal brain,Trans-thalamic,Op. 2,Voluson E6,1,D:\Fetal_Dataset\Images\Patient00998_Plane3_2_of_2.png
+Patient01013_Plane3_1_of_4,1013,Fetal brain,Trans-ventricular,Op. 3,Aloka,1,D:\Fetal_Dataset\Images\Patient01013_Plane3_1_of_4.png
+Patient01013_Plane3_2_of_4,1013,Fetal brain,Trans-thalamic,Op. 3,Aloka,1,D:\Fetal_Dataset\Images\Patient01013_Plane3_2_of_4.png
+Patient01013_Plane3_3_of_4,1013,Fetal brain,Trans-cerebellum,Op. 3,Aloka,1,D:\Fetal_Dataset\Images\Patient01013_Plane3_3_of_4.png
+Patient01018_Plane3_1_of_3,1018,Fetal brain,Trans-thalamic,Other,Other,1,D:\Fetal_Dataset\Images\Patient01018_Plane3_1_of_3.png
+Patient01018_Plane3_2_of_3,1018,Fetal brain,Trans-thalamic,Other,Other,1,D:\Fetal_Dataset\Images\Patient01018_Plane3_2_of_3.png
+Patient01018_Plane3_3_of_3,1018,Fetal brain,Trans-cerebellum,Other,Other,1,D:\Fetal_Dataset\Images\Patient01018_Plane3_3_of_3.png
+Patient01019_Plane3_1_of_4,1019,Fetal brain,Trans-cerebellum,Op. 2,Voluson E6,1,D:\Fetal_Dataset\Images\Patient01019_Plane3_1_of_4.png
+Patient01019_Plane3_2_of_4,1019,Fetal brain,Trans-thalamic,Op. 2,Voluson E6,1,D:\Fetal_Dataset\Images\Patient01019_Plane3_2_of_4.png
+Patient01019_Plane3_3_of_4,1019,Fetal brain,Trans-thalamic,Op. 2,Voluson E6,1,D:\Fetal_Dataset\Images\Patient01019_Plane3_3_of_4.png
+Patient01019_Plane3_4_of_4,1019,Fetal brain,Trans-ventricular,Op. 2,Voluson E6,1,D:\Fetal_Dataset\Images\Patient01019_Plane3_4_of_4.png
+Patient01022_Plane3_2_of_5,1022,Fetal brain,Trans-ventricular,Op. 1,Voluson E6,1,D:\Fetal_Dataset\Images\Patient01022_Plane3_2_of_5.png
+Patient01022_Plane3_3_of_5,1022,Fetal brain,Trans-cerebellum,Op. 1,Voluson E6,1,D:\Fetal_Dataset\Images\Patient01022_Plane3_3_of_5.png
+Patient01022_Plane3_4_of_5,1022,Fetal brain,Trans-thalamic,Op. 1,Voluson E6,1,D:\Fetal_Dataset\Images\Patient01022_Plane3_4_of_5.png
+Patient01022_Plane3_5_of_5,1022,Fetal brain,Trans-thalamic,Op. 1,Voluson E6,1,D:\Fetal_Dataset\Images\Patient01022_Plane3_5_of_5.png
+Patient01032_Plane3_1_of_3,1032,Fetal brain,Trans-thalamic,Op. 3,Aloka,1,D:\Fetal_Dataset\Images\Patient01032_Plane3_1_of_3.png
+Patient01032_Plane3_2_of_3,1032,Fetal brain,Trans-cerebellum,Op. 3,Aloka,1,D:\Fetal_Dataset\Images\Patient01032_Plane3_2_of_3.png
+Patient01032_Plane3_3_of_3,1032,Fetal brain,Trans-cerebellum,Op. 3,Aloka,1,D:\Fetal_Dataset\Images\Patient01032_Plane3_3_of_3.png
+Patient01035_Plane3_1_of_1,1035,Fetal brain,Trans-thalamic,Op. 3,Aloka,1,D:\Fetal_Dataset\Images\Patient01035_Plane3_1_of_1.png
+Patient01040_Plane3_1_of_2,1040,Fetal brain,Trans-cerebellum,Op. 2,Voluson E6,1,D:\Fetal_Dataset\Images\Patient01040_Plane3_1_of_2.png
+Patient01040_Plane3_2_of_2,1040,Fetal brain,Trans-cerebellum,Op. 2,Voluson E6,1,D:\Fetal_Dataset\Images\Patient01040_Plane3_2_of_2.png
+Patient01046_Plane3_1_of_3,1046,Fetal brain,Trans-cerebellum,Op. 1,Voluson E6,1,D:\Fetal_Dataset\Images\Patient01046_Plane3_1_of_3.png
+Patient01046_Plane3_2_of_3,1046,Fetal brain,Trans-ventricular,Op. 1,Voluson E6,1,D:\Fetal_Dataset\Images\Patient01046_Plane3_2_of_3.png
+Patient01046_Plane3_3_of_3,1046,Fetal brain,Trans-thalamic,Op. 1,Voluson E6,1,D:\Fetal_Dataset\Images\Patient01046_Plane3_3_of_3.png
+Patient01050_Plane3_1_of_2,1050,Fetal brain,Trans-ventricular,Op. 3,Aloka,1,D:\Fetal_Dataset\Images\Patient01050_Plane3_1_of_2.png
+Patient01050_Plane3_2_of_2,1050,Fetal brain,Trans-thalamic,Op. 3,Aloka,1,D:\Fetal_Dataset\Images\Patient01050_Plane3_2_of_2.png
+Patient01057_Plane3_1_of_3,1057,Fetal brain,Trans-thalamic,Op. 1,Voluson E6,1,D:\Fetal_Dataset\Images\Patient01057_Plane3_1_of_3.png
+Patient01057_Plane3_2_of_3,1057,Fetal brain,Trans-thalamic,Op. 1,Voluson E6,1,D:\Fetal_Dataset\Images\Patient01057_Plane3_2_of_3.png
+Patient01057_Plane3_3_of_3,1057,Fetal brain,Trans-thalamic,Op. 1,Voluson E6,1,D:\Fetal_Dataset\Images\Patient01057_Plane3_3_of_3.png
+Patient01074_Plane3_1_of_2,1074,Fetal brain,Trans-thalamic,Op. 2,Voluson E6,1,D:\Fetal_Dataset\Images\Patient01074_Plane3_1_of_2.png
+Patient01074_Plane3_2_of_2,1074,Fetal brain,Trans-thalamic,Op. 2,Voluson E6,1,D:\Fetal_Dataset\Images\Patient01074_Plane3_2_of_2.png
+Patient01075_Plane3_2_of_4,1075,Fetal brain,Trans-thalamic,Op. 1,Voluson E6,1,D:\Fetal_Dataset\Images\Patient01075_Plane3_2_of_4.png
+Patient01075_Plane3_3_of_4,1075,Fetal brain,Trans-cerebellum,Op. 1,Voluson E6,1,D:\Fetal_Dataset\Images\Patient01075_Plane3_3_of_4.png
+Patient01079_Plane3_1_of_3,1079,Fetal brain,Trans-thalamic,Op. 3,Aloka,1,D:\Fetal_Dataset\Images\Patient01079_Plane3_1_of_3.png
+Patient01079_Plane3_2_of_3,1079,Fetal brain,Trans-ventricular,Op. 3,Aloka,1,D:\Fetal_Dataset\Images\Patient01079_Plane3_2_of_3.png
+Patient01079_Plane3_3_of_3,1079,Fetal brain,Trans-cerebellum,Op. 3,Aloka,1,D:\Fetal_Dataset\Images\Patient01079_Plane3_3_of_3.png
+Patient01083_Plane3_1_of_2,1083,Fetal brain,Trans-thalamic,Op. 2,Voluson E6,1,D:\Fetal_Dataset\Images\Patient01083_Plane3_1_of_2.png
+Patient01083_Plane3_2_of_2,1083,Fetal brain,Trans-cerebellum,Op. 2,Voluson E6,1,D:\Fetal_Dataset\Images\Patient01083_Plane3_2_of_2.png
+Patient01094_Plane3_1_of_2,1094,Fetal brain,Trans-thalamic,Op. 3,Aloka,1,D:\Fetal_Dataset\Images\Patient01094_Plane3_1_of_2.png
+Patient01094_Plane3_2_of_2,1094,Fetal brain,Trans-ventricular,Op. 3,Aloka,1,D:\Fetal_Dataset\Images\Patient01094_Plane3_2_of_2.png
+Patient01102_Plane3_1_of_2,1102,Fetal brain,Trans-thalamic,Op. 1,Voluson E6,1,D:\Fetal_Dataset\Images\Patient01102_Plane3_1_of_2.png
+Patient01102_Plane3_2_of_2,1102,Fetal brain,Trans-cerebellum,Op. 1,Voluson E6,1,D:\Fetal_Dataset\Images\Patient01102_Plane3_2_of_2.png
+Patient01104_Plane3_1_of_2,1104,Fetal brain,Trans-thalamic,Op. 2,Voluson E6,1,D:\Fetal_Dataset\Images\Patient01104_Plane3_1_of_2.png
+Patient01104_Plane3_2_of_2,1104,Fetal brain,Trans-thalamic,Op. 2,Voluson E6,1,D:\Fetal_Dataset\Images\Patient01104_Plane3_2_of_2.png
+Patient01115_Plane3_1_of_4,1115,Fetal brain,Trans-thalamic,Op. 3,Aloka,1,D:\Fetal_Dataset\Images\Patient01115_Plane3_1_of_4.png
+Patient01115_Plane3_2_of_4,1115,Fetal brain,Trans-ventricular,Op. 3,Aloka,1,D:\Fetal_Dataset\Images\Patient01115_Plane3_2_of_4.png
+Patient01115_Plane3_3_of_4,1115,Fetal brain,Trans-cerebellum,Op. 3,Aloka,1,D:\Fetal_Dataset\Images\Patient01115_Plane3_3_of_4.png
+Patient01115_Plane3_4_of_4,1115,Fetal brain,Trans-cerebellum,Op. 3,Aloka,1,D:\Fetal_Dataset\Images\Patient01115_Plane3_4_of_4.png
+Patient01118_Plane3_1_of_6,1118,Fetal brain,Trans-thalamic,Op. 2,Voluson E6,1,D:\Fetal_Dataset\Images\Patient01118_Plane3_1_of_6.png
+Patient01118_Plane3_2_of_6,1118,Fetal brain,Trans-ventricular,Op. 2,Voluson E6,1,D:\Fetal_Dataset\Images\Patient01118_Plane3_2_of_6.png
+Patient01118_Plane3_3_of_6,1118,Fetal brain,Trans-cerebellum,Op. 2,Voluson E6,1,D:\Fetal_Dataset\Images\Patient01118_Plane3_3_of_6.png
+Patient01118_Plane3_4_of_6,1118,Fetal brain,Trans-ventricular,Op. 2,Voluson E6,1,D:\Fetal_Dataset\Images\Patient01118_Plane3_4_of_6.png
+Patient01118_Plane3_5_of_6,1118,Fetal brain,Trans-ventricular,Op. 2,Voluson E6,1,D:\Fetal_Dataset\Images\Patient01118_Plane3_5_of_6.png
+Patient01118_Plane3_6_of_6,1118,Fetal brain,Trans-cerebellum,Op. 2,Voluson E6,1,D:\Fetal_Dataset\Images\Patient01118_Plane3_6_of_6.png
+Patient01121_Plane3_1_of_2,1121,Fetal brain,Trans-ventricular,Op. 2,Voluson E6,1,D:\Fetal_Dataset\Images\Patient01121_Plane3_1_of_2.png
+Patient01121_Plane3_2_of_2,1121,Fetal brain,Trans-ventricular,Op. 2,Voluson E6,1,D:\Fetal_Dataset\Images\Patient01121_Plane3_2_of_2.png
+Patient01124_Plane3_1_of_4,1124,Fetal brain,Trans-thalamic,Op. 1,Voluson E6,1,D:\Fetal_Dataset\Images\Patient01124_Plane3_1_of_4.png
+Patient01124_Plane3_2_of_4,1124,Fetal brain,Trans-cerebellum,Op. 1,Voluson E6,1,D:\Fetal_Dataset\Images\Patient01124_Plane3_2_of_4.png
+Patient01124_Plane3_3_of_4,1124,Fetal brain,Trans-thalamic,Op. 1,Voluson E6,1,D:\Fetal_Dataset\Images\Patient01124_Plane3_3_of_4.png
+Patient01124_Plane3_4_of_4,1124,Fetal brain,Trans-thalamic,Op. 1,Voluson E6,1,D:\Fetal_Dataset\Images\Patient01124_Plane3_4_of_4.png
+Patient01126_Plane3_1_of_5,1126,Fetal brain,Trans-cerebellum,Op. 2,Voluson E6,1,D:\Fetal_Dataset\Images\Patient01126_Plane3_1_of_5.png
+Patient01126_Plane3_2_of_5,1126,Fetal brain,Trans-ventricular,Op. 2,Voluson E6,1,D:\Fetal_Dataset\Images\Patient01126_Plane3_2_of_5.png
+Patient01126_Plane3_3_of_5,1126,Fetal brain,Trans-thalamic,Op. 2,Voluson E6,1,D:\Fetal_Dataset\Images\Patient01126_Plane3_3_of_5.png
+Patient01126_Plane3_4_of_5,1126,Fetal brain,Trans-ventricular,Op. 2,Voluson E6,1,D:\Fetal_Dataset\Images\Patient01126_Plane3_4_of_5.png
+Patient01126_Plane3_5_of_5,1126,Fetal brain,Trans-cerebellum,Op. 2,Voluson E6,1,D:\Fetal_Dataset\Images\Patient01126_Plane3_5_of_5.png
+Patient01130_Plane3_1_of_2,1130,Fetal brain,Trans-ventricular,Op. 3,Aloka,1,D:\Fetal_Dataset\Images\Patient01130_Plane3_1_of_2.png
+Patient01130_Plane3_2_of_2,1130,Fetal brain,Trans-cerebellum,Op. 3,Aloka,1,D:\Fetal_Dataset\Images\Patient01130_Plane3_2_of_2.png
+Patient01135_Plane3_1_of_3,1135,Fetal brain,Trans-thalamic,Op. 1,Voluson E6,1,D:\Fetal_Dataset\Images\Patient01135_Plane3_1_of_3.png
+Patient01135_Plane3_2_of_3,1135,Fetal brain,Trans-ventricular,Op. 1,Voluson E6,1,D:\Fetal_Dataset\Images\Patient01135_Plane3_2_of_3.png
+Patient01135_Plane3_3_of_3,1135,Fetal brain,Trans-thalamic,Op. 1,Voluson E6,1,D:\Fetal_Dataset\Images\Patient01135_Plane3_3_of_3.png
+Patient01139_Plane3_1_of_6,1139,Fetal brain,Trans-cerebellum,Op. 1,Voluson E6,1,D:\Fetal_Dataset\Images\Patient01139_Plane3_1_of_6.png
+Patient01139_Plane3_2_of_6,1139,Fetal brain,Trans-ventricular,Op. 1,Voluson E6,1,D:\Fetal_Dataset\Images\Patient01139_Plane3_2_of_6.png
+Patient01139_Plane3_3_of_6,1139,Fetal brain,Trans-thalamic,Op. 1,Voluson E6,1,D:\Fetal_Dataset\Images\Patient01139_Plane3_3_of_6.png
+Patient01139_Plane3_4_of_6,1139,Fetal brain,Trans-ventricular,Op. 1,Voluson E6,1,D:\Fetal_Dataset\Images\Patient01139_Plane3_4_of_6.png
+Patient01139_Plane3_6_of_6,1139,Fetal brain,Trans-thalamic,Op. 1,Voluson E6,1,D:\Fetal_Dataset\Images\Patient01139_Plane3_6_of_6.png
+Patient01155_Plane3_1_of_6,1155,Fetal brain,Trans-thalamic,Op. 1,Voluson E6,1,D:\Fetal_Dataset\Images\Patient01155_Plane3_1_of_6.png
+Patient01155_Plane3_2_of_6,1155,Fetal brain,Trans-cerebellum,Op. 1,Voluson E6,1,D:\Fetal_Dataset\Images\Patient01155_Plane3_2_of_6.png
+Patient01155_Plane3_3_of_6,1155,Fetal brain,Trans-thalamic,Op. 1,Voluson E6,1,D:\Fetal_Dataset\Images\Patient01155_Plane3_3_of_6.png
+Patient01155_Plane3_4_of_6,1155,Fetal brain,Trans-thalamic,Op. 1,Voluson E6,1,D:\Fetal_Dataset\Images\Patient01155_Plane3_4_of_6.png
+Patient01155_Plane3_5_of_6,1155,Fetal brain,Trans-thalamic,Op. 1,Voluson E6,1,D:\Fetal_Dataset\Images\Patient01155_Plane3_5_of_6.png
+Patient01155_Plane3_6_of_6,1155,Fetal brain,Trans-thalamic,Op. 1,Voluson E6,1,D:\Fetal_Dataset\Images\Patient01155_Plane3_6_of_6.png
+Patient01161_Plane3_1_of_4,1161,Fetal brain,Trans-cerebellum,Op. 1,Voluson E6,1,D:\Fetal_Dataset\Images\Patient01161_Plane3_1_of_4.png
+Patient01161_Plane3_2_of_4,1161,Fetal brain,Trans-ventricular,Op. 1,Voluson E6,1,D:\Fetal_Dataset\Images\Patient01161_Plane3_2_of_4.png
+Patient01161_Plane3_3_of_4,1161,Fetal brain,Trans-thalamic,Op. 1,Voluson E6,1,D:\Fetal_Dataset\Images\Patient01161_Plane3_3_of_4.png
+Patient01161_Plane3_4_of_4,1161,Fetal brain,Trans-thalamic,Op. 1,Voluson E6,1,D:\Fetal_Dataset\Images\Patient01161_Plane3_4_of_4.png
+Patient01166_Plane3_1_of_4,1166,Fetal brain,Trans-thalamic,Op. 3,Aloka,1,D:\Fetal_Dataset\Images\Patient01166_Plane3_1_of_4.png
+Patient01166_Plane3_2_of_4,1166,Fetal brain,Trans-thalamic,Op. 3,Aloka,1,D:\Fetal_Dataset\Images\Patient01166_Plane3_2_of_4.png
+Patient01166_Plane3_3_of_4,1166,Fetal brain,Trans-ventricular,Op. 3,Aloka,1,D:\Fetal_Dataset\Images\Patient01166_Plane3_3_of_4.png
+Patient01166_Plane3_4_of_4,1166,Fetal brain,Trans-cerebellum,Op. 3,Aloka,1,D:\Fetal_Dataset\Images\Patient01166_Plane3_4_of_4.png
+Patient01182_Plane3_1_of_5,1182,Fetal brain,Trans-cerebellum,Op. 2,Voluson E6,1,D:\Fetal_Dataset\Images\Patient01182_Plane3_1_of_5.png
+Patient01182_Plane3_2_of_5,1182,Fetal brain,Trans-thalamic,Op. 2,Voluson E6,1,D:\Fetal_Dataset\Images\Patient01182_Plane3_2_of_5.png
+Patient01182_Plane3_3_of_5,1182,Fetal brain,Trans-ventricular,Op. 2,Voluson E6,1,D:\Fetal_Dataset\Images\Patient01182_Plane3_3_of_5.png
+Patient01182_Plane3_4_of_5,1182,Fetal brain,Trans-cerebellum,Op. 2,Voluson E6,1,D:\Fetal_Dataset\Images\Patient01182_Plane3_4_of_5.png
+Patient01182_Plane3_5_of_5,1182,Fetal brain,Trans-thalamic,Op. 2,Voluson E6,1,D:\Fetal_Dataset\Images\Patient01182_Plane3_5_of_5.png
+Patient01189_Plane3_1_of_3,1189,Fetal brain,Trans-thalamic,Op. 1,Voluson E6,1,D:\Fetal_Dataset\Images\Patient01189_Plane3_1_of_3.png
+Patient01189_Plane3_2_of_3,1189,Fetal brain,Trans-cerebellum,Op. 1,Voluson E6,1,D:\Fetal_Dataset\Images\Patient01189_Plane3_2_of_3.png
+Patient01189_Plane3_3_of_3,1189,Fetal brain,Trans-ventricular,Op. 1,Voluson E6,1,D:\Fetal_Dataset\Images\Patient01189_Plane3_3_of_3.png
+Patient01198_Plane3_1_of_2,1198,Fetal brain,Trans-thalamic,Op. 3,Aloka,1,D:\Fetal_Dataset\Images\Patient01198_Plane3_1_of_2.png
+Patient01202_Plane3_1_of_7,1202,Fetal brain,Trans-thalamic,Op. 2,Voluson E6,1,D:\Fetal_Dataset\Images\Patient01202_Plane3_1_of_7.png
+Patient01202_Plane3_2_of_7,1202,Fetal brain,Trans-ventricular,Op. 2,Voluson E6,1,D:\Fetal_Dataset\Images\Patient01202_Plane3_2_of_7.png
+Patient01202_Plane3_3_of_7,1202,Fetal brain,Trans-cerebellum,Op. 2,Voluson E6,1,D:\Fetal_Dataset\Images\Patient01202_Plane3_3_of_7.png
+Patient01202_Plane3_4_of_7,1202,Fetal brain,Trans-cerebellum,Op. 2,Voluson E6,1,D:\Fetal_Dataset\Images\Patient01202_Plane3_4_of_7.png
+Patient01202_Plane3_5_of_7,1202,Fetal brain,Trans-cerebellum,Op. 2,Voluson E6,1,D:\Fetal_Dataset\Images\Patient01202_Plane3_5_of_7.png
+Patient01202_Plane3_6_of_7,1202,Fetal brain,Trans-ventricular,Op. 2,Voluson E6,1,D:\Fetal_Dataset\Images\Patient01202_Plane3_6_of_7.png
+Patient01202_Plane3_7_of_7,1202,Fetal brain,Trans-thalamic,Op. 2,Voluson E6,1,D:\Fetal_Dataset\Images\Patient01202_Plane3_7_of_7.png
+Patient01209_Plane3_1_of_7,1209,Fetal brain,Trans-thalamic,Op. 1,Voluson E6,1,D:\Fetal_Dataset\Images\Patient01209_Plane3_1_of_7.png
+Patient01209_Plane3_2_of_7,1209,Fetal brain,Trans-cerebellum,Op. 1,Voluson E6,1,D:\Fetal_Dataset\Images\Patient01209_Plane3_2_of_7.png
+Patient01209_Plane3_3_of_7,1209,Fetal brain,Trans-thalamic,Op. 1,Voluson E6,1,D:\Fetal_Dataset\Images\Patient01209_Plane3_3_of_7.png
+Patient01209_Plane3_4_of_7,1209,Fetal brain,Trans-ventricular,Op. 1,Voluson E6,1,D:\Fetal_Dataset\Images\Patient01209_Plane3_4_of_7.png
+Patient01209_Plane3_6_of_7,1209,Fetal brain,Trans-ventricular,Op. 1,Voluson E6,1,D:\Fetal_Dataset\Images\Patient01209_Plane3_6_of_7.png
+Patient01209_Plane3_7_of_7,1209,Fetal brain,Trans-cerebellum,Op. 1,Voluson E6,1,D:\Fetal_Dataset\Images\Patient01209_Plane3_7_of_7.png
+Patient01212_Plane3_1_of_4,1212,Fetal brain,Trans-cerebellum,Op. 1,Voluson E6,1,D:\Fetal_Dataset\Images\Patient01212_Plane3_1_of_4.png
+Patient01212_Plane3_2_of_4,1212,Fetal brain,Trans-ventricular,Op. 1,Voluson E6,1,D:\Fetal_Dataset\Images\Patient01212_Plane3_2_of_4.png
+Patient01212_Plane3_3_of_4,1212,Fetal brain,Trans-thalamic,Op. 1,Voluson E6,1,D:\Fetal_Dataset\Images\Patient01212_Plane3_3_of_4.png
+Patient01212_Plane3_4_of_4,1212,Fetal brain,Trans-ventricular,Op. 1,Voluson E6,1,D:\Fetal_Dataset\Images\Patient01212_Plane3_4_of_4.png
+Patient01216_Plane3_1_of_3,1216,Fetal brain,Trans-ventricular,Op. 3,Aloka,1,D:\Fetal_Dataset\Images\Patient01216_Plane3_1_of_3.png
+Patient01216_Plane3_2_of_3,1216,Fetal brain,Trans-ventricular,Op. 3,Aloka,1,D:\Fetal_Dataset\Images\Patient01216_Plane3_2_of_3.png
+Patient01216_Plane3_3_of_3,1216,Fetal brain,Trans-thalamic,Op. 3,Aloka,1,D:\Fetal_Dataset\Images\Patient01216_Plane3_3_of_3.png
+Patient01218_Plane3_1_of_2,1218,Fetal brain,Trans-thalamic,Op. 3,Aloka,1,D:\Fetal_Dataset\Images\Patient01218_Plane3_1_of_2.png
+Patient01218_Plane3_2_of_2,1218,Fetal brain,Trans-thalamic,Op. 3,Aloka,1,D:\Fetal_Dataset\Images\Patient01218_Plane3_2_of_2.png
+Patient01219_Plane3_1_of_2,1219,Fetal brain,Trans-thalamic,Op. 3,Aloka,1,D:\Fetal_Dataset\Images\Patient01219_Plane3_1_of_2.png
+Patient01219_Plane3_2_of_2,1219,Fetal brain,Trans-thalamic,Op. 3,Aloka,1,D:\Fetal_Dataset\Images\Patient01219_Plane3_2_of_2.png
+Patient01223_Plane3_1_of_4,1223,Fetal brain,Trans-thalamic,Op. 1,Voluson E6,1,D:\Fetal_Dataset\Images\Patient01223_Plane3_1_of_4.png
+Patient01223_Plane3_2_of_4,1223,Fetal brain,Trans-cerebellum,Op. 1,Voluson E6,1,D:\Fetal_Dataset\Images\Patient01223_Plane3_2_of_4.png
+Patient01223_Plane3_3_of_4,1223,Fetal brain,Trans-ventricular,Op. 1,Voluson E6,1,D:\Fetal_Dataset\Images\Patient01223_Plane3_3_of_4.png
+Patient01223_Plane3_4_of_4,1223,Fetal brain,Trans-cerebellum,Op. 1,Voluson E6,1,D:\Fetal_Dataset\Images\Patient01223_Plane3_4_of_4.png
+Patient01229_Plane3_1_of_4,1229,Fetal brain,Trans-cerebellum,Op. 1,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01229_Plane3_1_of_4.png
+Patient01229_Plane3_2_of_4,1229,Fetal brain,Trans-thalamic,Op. 1,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01229_Plane3_2_of_4.png
+Patient01229_Plane3_4_of_4,1229,Fetal brain,Trans-ventricular,Op. 1,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01229_Plane3_4_of_4.png
+Patient01231_Plane3_1_of_3,1231,Fetal brain,Trans-thalamic,Op. 1,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01231_Plane3_1_of_3.png
+Patient01231_Plane3_2_of_3,1231,Fetal brain,Trans-thalamic,Op. 1,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01231_Plane3_2_of_3.png
+Patient01231_Plane3_3_of_3,1231,Fetal brain,Trans-thalamic,Op. 1,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01231_Plane3_3_of_3.png
+Patient01232_Plane3_1_of_4,1232,Fetal brain,Trans-cerebellum,Op. 1,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01232_Plane3_1_of_4.png
+Patient01232_Plane3_2_of_4,1232,Fetal brain,Trans-ventricular,Op. 1,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01232_Plane3_2_of_4.png
+Patient01232_Plane3_3_of_4,1232,Fetal brain,Trans-ventricular,Op. 1,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01232_Plane3_3_of_4.png
+Patient01232_Plane3_4_of_4,1232,Fetal brain,Trans-thalamic,Op. 1,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01232_Plane3_4_of_4.png
+Patient01240_Plane3_1_of_3,1240,Fetal brain,Trans-thalamic,Op. 1,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01240_Plane3_1_of_3.png
+Patient01240_Plane3_2_of_3,1240,Fetal brain,Trans-cerebellum,Op. 1,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01240_Plane3_2_of_3.png
+Patient01240_Plane3_3_of_3,1240,Fetal brain,Trans-thalamic,Op. 1,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01240_Plane3_3_of_3.png
+Patient01247_Plane3_1_of_2,1247,Fetal brain,Trans-thalamic,Op. 3,Aloka,0,D:\Fetal_Dataset\Images\Patient01247_Plane3_1_of_2.png
+Patient01247_Plane3_2_of_2,1247,Fetal brain,Trans-thalamic,Op. 3,Aloka,0,D:\Fetal_Dataset\Images\Patient01247_Plane3_2_of_2.png
+Patient01260_Plane3_1_of_2,1260,Fetal brain,Trans-thalamic,Op. 3,Aloka,0,D:\Fetal_Dataset\Images\Patient01260_Plane3_1_of_2.png
+Patient01260_Plane3_2_of_2,1260,Fetal brain,Trans-thalamic,Op. 3,Aloka,0,D:\Fetal_Dataset\Images\Patient01260_Plane3_2_of_2.png
+Patient01268_Plane3_1_of_1,1268,Fetal brain,Trans-thalamic,Op. 2,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01268_Plane3_1_of_1.png
+Patient01273_Plane3_1_of_2,1273,Fetal brain,Trans-thalamic,Op. 3,Aloka,0,D:\Fetal_Dataset\Images\Patient01273_Plane3_1_of_2.png
+Patient01273_Plane3_2_of_2,1273,Fetal brain,Trans-ventricular,Op. 3,Aloka,0,D:\Fetal_Dataset\Images\Patient01273_Plane3_2_of_2.png
+Patient01274_Plane3_1_of_4,1274,Fetal brain,Trans-cerebellum,Op. 1,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01274_Plane3_1_of_4.png
+Patient01274_Plane3_2_of_4,1274,Fetal brain,Trans-thalamic,Op. 1,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01274_Plane3_2_of_4.png
+Patient01274_Plane3_3_of_4,1274,Fetal brain,Trans-ventricular,Op. 1,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01274_Plane3_3_of_4.png
+Patient01274_Plane3_4_of_4,1274,Fetal brain,Trans-thalamic,Op. 1,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01274_Plane3_4_of_4.png
+Patient01275_Plane3_1_of_7,1275,Fetal brain,Trans-ventricular,Other,Voluson S10,0,D:\Fetal_Dataset\Images\Patient01275_Plane3_1_of_7.png
+Patient01275_Plane3_2_of_7,1275,Fetal brain,Trans-cerebellum,Other,Voluson S10,0,D:\Fetal_Dataset\Images\Patient01275_Plane3_2_of_7.png
+Patient01275_Plane3_3_of_7,1275,Fetal brain,Trans-thalamic,Other,Voluson S10,0,D:\Fetal_Dataset\Images\Patient01275_Plane3_3_of_7.png
+Patient01275_Plane3_4_of_7,1275,Fetal brain,Trans-thalamic,Other,Voluson S10,0,D:\Fetal_Dataset\Images\Patient01275_Plane3_4_of_7.png
+Patient01275_Plane3_5_of_7,1275,Fetal brain,Trans-thalamic,Other,Voluson S10,0,D:\Fetal_Dataset\Images\Patient01275_Plane3_5_of_7.png
+Patient01275_Plane3_6_of_7,1275,Fetal brain,Trans-thalamic,Other,Voluson S10,0,D:\Fetal_Dataset\Images\Patient01275_Plane3_6_of_7.png
+Patient01275_Plane3_7_of_7,1275,Fetal brain,Trans-ventricular,Other,Voluson S10,0,D:\Fetal_Dataset\Images\Patient01275_Plane3_7_of_7.png
+Patient01300_Plane3_1_of_6,1300,Fetal brain,Trans-ventricular,Op. 2,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01300_Plane3_1_of_6.png
+Patient01300_Plane3_2_of_6,1300,Fetal brain,Trans-cerebellum,Op. 2,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01300_Plane3_2_of_6.png
+Patient01300_Plane3_3_of_6,1300,Fetal brain,Trans-cerebellum,Op. 2,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01300_Plane3_3_of_6.png
+Patient01300_Plane3_4_of_6,1300,Fetal brain,Trans-thalamic,Op. 2,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01300_Plane3_4_of_6.png
+Patient01300_Plane3_5_of_6,1300,Fetal brain,Trans-thalamic,Op. 2,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01300_Plane3_5_of_6.png
+Patient01300_Plane3_6_of_6,1300,Fetal brain,Trans-ventricular,Op. 2,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01300_Plane3_6_of_6.png
+Patient01328_Plane3_1_of_4,1328,Fetal brain,Trans-ventricular,Op. 3,Aloka,0,D:\Fetal_Dataset\Images\Patient01328_Plane3_1_of_4.png
+Patient01328_Plane3_2_of_4,1328,Fetal brain,Trans-cerebellum,Op. 3,Aloka,0,D:\Fetal_Dataset\Images\Patient01328_Plane3_2_of_4.png
+Patient01328_Plane3_3_of_4,1328,Fetal brain,Trans-thalamic,Op. 3,Aloka,0,D:\Fetal_Dataset\Images\Patient01328_Plane3_3_of_4.png
+Patient01328_Plane3_4_of_4,1328,Fetal brain,Trans-thalamic,Op. 3,Aloka,0,D:\Fetal_Dataset\Images\Patient01328_Plane3_4_of_4.png
+Patient01348_Plane3_1_of_1,1348,Fetal brain,Trans-thalamic,Op. 3,Aloka,0,D:\Fetal_Dataset\Images\Patient01348_Plane3_1_of_1.png
+Patient01349_Plane3_1_of_3,1349,Fetal brain,Trans-thalamic,Op. 3,Aloka,0,D:\Fetal_Dataset\Images\Patient01349_Plane3_1_of_3.png
+Patient01349_Plane3_2_of_3,1349,Fetal brain,Trans-thalamic,Op. 3,Aloka,0,D:\Fetal_Dataset\Images\Patient01349_Plane3_2_of_3.png
+Patient01349_Plane3_3_of_3,1349,Fetal brain,Trans-cerebellum,Op. 3,Aloka,0,D:\Fetal_Dataset\Images\Patient01349_Plane3_3_of_3.png
+Patient01359_Plane3_1_of_3,1359,Fetal brain,Trans-thalamic,Op. 2,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01359_Plane3_1_of_3.png
+Patient01359_Plane3_2_of_3,1359,Fetal brain,Trans-thalamic,Op. 2,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01359_Plane3_2_of_3.png
+Patient01359_Plane3_3_of_3,1359,Fetal brain,Trans-thalamic,Op. 2,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01359_Plane3_3_of_3.png
+Patient01360_Plane3_1_of_2,1360,Fetal brain,Trans-thalamic,Op. 1,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01360_Plane3_1_of_2.png
+Patient01363_Plane3_1_of_7,1363,Fetal brain,Trans-thalamic,Other,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01363_Plane3_1_of_7.png
+Patient01363_Plane3_2_of_7,1363,Fetal brain,Trans-ventricular,Other,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01363_Plane3_2_of_7.png
+Patient01363_Plane3_3_of_7,1363,Fetal brain,Trans-cerebellum,Other,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01363_Plane3_3_of_7.png
+Patient01363_Plane3_4_of_7,1363,Fetal brain,Trans-cerebellum,Other,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01363_Plane3_4_of_7.png
+Patient01363_Plane3_5_of_7,1363,Fetal brain,Trans-thalamic,Other,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01363_Plane3_5_of_7.png
+Patient01363_Plane3_6_of_7,1363,Fetal brain,Trans-thalamic,Other,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01363_Plane3_6_of_7.png
+Patient01363_Plane3_7_of_7,1363,Fetal brain,Trans-ventricular,Other,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01363_Plane3_7_of_7.png
+Patient01366_Plane3_1_of_4,1366,Fetal brain,Trans-thalamic,Op. 3,Aloka,0,D:\Fetal_Dataset\Images\Patient01366_Plane3_1_of_4.png
+Patient01366_Plane3_2_of_4,1366,Fetal brain,Trans-thalamic,Op. 3,Aloka,0,D:\Fetal_Dataset\Images\Patient01366_Plane3_2_of_4.png
+Patient01366_Plane3_3_of_4,1366,Fetal brain,Trans-thalamic,Op. 3,Aloka,0,D:\Fetal_Dataset\Images\Patient01366_Plane3_3_of_4.png
+Patient01366_Plane3_4_of_4,1366,Fetal brain,Trans-thalamic,Op. 3,Aloka,0,D:\Fetal_Dataset\Images\Patient01366_Plane3_4_of_4.png
+Patient01394_Plane3_2_of_3,1394,Fetal brain,Trans-cerebellum,Other,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01394_Plane3_2_of_3.png
+Patient01394_Plane3_3_of_3,1394,Fetal brain,Trans-ventricular,Other,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01394_Plane3_3_of_3.png
+Patient01399_Plane3_1_of_2,1399,Fetal brain,Trans-cerebellum,Other,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01399_Plane3_1_of_2.png
+Patient01399_Plane3_2_of_2,1399,Fetal brain,Trans-ventricular,Other,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01399_Plane3_2_of_2.png
+Patient01407_Plane3_1_of_2,1407,Fetal brain,Trans-cerebellum,Other,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01407_Plane3_1_of_2.png
+Patient01407_Plane3_2_of_2,1407,Fetal brain,Trans-thalamic,Other,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01407_Plane3_2_of_2.png
+Patient01411_Plane3_1_of_3,1411,Fetal brain,Trans-thalamic,Op. 2,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01411_Plane3_1_of_3.png
+Patient01411_Plane3_2_of_3,1411,Fetal brain,Trans-thalamic,Op. 2,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01411_Plane3_2_of_3.png
+Patient01411_Plane3_3_of_3,1411,Fetal brain,Trans-thalamic,Op. 2,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01411_Plane3_3_of_3.png
+Patient01413_Plane3_1_of_4,1413,Fetal brain,Trans-thalamic,Op. 2,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01413_Plane3_1_of_4.png
+Patient01413_Plane3_2_of_4,1413,Fetal brain,Trans-cerebellum,Op. 2,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01413_Plane3_2_of_4.png
+Patient01413_Plane3_3_of_4,1413,Fetal brain,Trans-cerebellum,Op. 2,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01413_Plane3_3_of_4.png
+Patient01413_Plane3_4_of_4,1413,Fetal brain,Trans-ventricular,Op. 2,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01413_Plane3_4_of_4.png
+Patient01421_Plane3_1_of_2,1421,Fetal brain,Trans-ventricular,Op. 1,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01421_Plane3_1_of_2.png
+Patient01421_Plane3_2_of_2,1421,Fetal brain,Trans-cerebellum,Op. 1,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01421_Plane3_2_of_2.png
+Patient01422_Plane3_1_of_2,1422,Fetal brain,Trans-thalamic,Op. 3,Aloka,0,D:\Fetal_Dataset\Images\Patient01422_Plane3_1_of_2.png
+Patient01422_Plane3_2_of_2,1422,Fetal brain,Trans-ventricular,Op. 3,Aloka,0,D:\Fetal_Dataset\Images\Patient01422_Plane3_2_of_2.png
+Patient01423_Plane3_1_of_1,1423,Fetal brain,Trans-ventricular,Op. 3,Aloka,0,D:\Fetal_Dataset\Images\Patient01423_Plane3_1_of_1.png
+Patient01461_Plane3_1_of_3,1461,Fetal brain,Trans-cerebellum,Op. 2,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01461_Plane3_1_of_3.png
+Patient01461_Plane3_2_of_3,1461,Fetal brain,Trans-cerebellum,Op. 2,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01461_Plane3_2_of_3.png
+Patient01461_Plane3_3_of_3,1461,Fetal brain,Trans-ventricular,Op. 2,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01461_Plane3_3_of_3.png
+Patient01463_Plane3_1_of_3,1463,Fetal brain,Trans-thalamic,Op. 2,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01463_Plane3_1_of_3.png
+Patient01463_Plane3_2_of_3,1463,Fetal brain,Trans-thalamic,Op. 2,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01463_Plane3_2_of_3.png
+Patient01463_Plane3_3_of_3,1463,Fetal brain,Trans-thalamic,Op. 2,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01463_Plane3_3_of_3.png
+Patient01464_Plane3_1_of_2,1464,Fetal brain,Trans-cerebellum,Op. 2,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01464_Plane3_1_of_2.png
+Patient01464_Plane3_2_of_2,1464,Fetal brain,Trans-thalamic,Op. 1,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01464_Plane3_2_of_2.png
+Patient01471_Plane3_1_of_2,1471,Fetal brain,Trans-thalamic,Other,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01471_Plane3_1_of_2.png
+Patient01471_Plane3_2_of_2,1471,Fetal brain,Trans-thalamic,Other,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01471_Plane3_2_of_2.png
+Patient01492_Plane3_1_of_1,1492,Fetal brain,Trans-thalamic,Op. 1,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01492_Plane3_1_of_1.png
+Patient01493_Plane3_1_of_5,1493,Fetal brain,Trans-thalamic,Op. 2,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01493_Plane3_1_of_5.png
+Patient01493_Plane3_2_of_5,1493,Fetal brain,Trans-thalamic,Op. 2,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01493_Plane3_2_of_5.png
+Patient01493_Plane3_3_of_5,1493,Fetal brain,Trans-cerebellum,Op. 2,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01493_Plane3_3_of_5.png
+Patient01493_Plane3_4_of_5,1493,Fetal brain,Trans-thalamic,Op. 2,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01493_Plane3_4_of_5.png
+Patient01493_Plane3_5_of_5,1493,Fetal brain,Trans-thalamic,Op. 2,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01493_Plane3_5_of_5.png
+Patient01494_Plane3_1_of_4,1494,Fetal brain,Trans-thalamic,Op. 1,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01494_Plane3_1_of_4.png
+Patient01494_Plane3_2_of_4,1494,Fetal brain,Trans-ventricular,Op. 1,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01494_Plane3_2_of_4.png
+Patient01494_Plane3_3_of_4,1494,Fetal brain,Trans-cerebellum,Op. 1,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01494_Plane3_3_of_4.png
+Patient01494_Plane3_4_of_4,1494,Fetal brain,Trans-thalamic,Op. 1,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01494_Plane3_4_of_4.png
+Patient01495_Plane3_1_of_1,1495,Fetal brain,Trans-ventricular,Op. 1,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01495_Plane3_1_of_1.png
+Patient01509_Plane3_1_of_2,1509,Fetal brain,Trans-thalamic,Other,Voluson S10,0,D:\Fetal_Dataset\Images\Patient01509_Plane3_1_of_2.png
+Patient01509_Plane3_2_of_2,1509,Fetal brain,Trans-ventricular,Other,Voluson S10,0,D:\Fetal_Dataset\Images\Patient01509_Plane3_2_of_2.png
+Patient01522_Plane3_1_of_1,1522,Fetal brain,Trans-ventricular,Op. 1,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01522_Plane3_1_of_1.png
+Patient01532_Plane3_1_of_1,1532,Fetal brain,Trans-thalamic,Other,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01532_Plane3_1_of_1.png
+Patient01555_Plane3_1_of_2,1555,Fetal brain,Trans-ventricular,Op. 1,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01555_Plane3_1_of_2.png
+Patient01555_Plane3_2_of_2,1555,Fetal brain,Trans-thalamic,Op. 1,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01555_Plane3_2_of_2.png
+Patient01556_Plane3_1_of_2,1556,Fetal brain,Trans-thalamic,Op. 2,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01556_Plane3_1_of_2.png
+Patient01556_Plane3_2_of_2,1556,Fetal brain,Trans-thalamic,Op. 2,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01556_Plane3_2_of_2.png
+Patient01560_Plane3_1_of_4,1560,Fetal brain,Trans-thalamic,Op. 2,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01560_Plane3_1_of_4.png
+Patient01560_Plane3_2_of_4,1560,Fetal brain,Trans-cerebellum,Op. 2,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01560_Plane3_2_of_4.png
+Patient01560_Plane3_3_of_4,1560,Fetal brain,Trans-thalamic,Op. 2,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01560_Plane3_3_of_4.png
+Patient01560_Plane3_4_of_4,1560,Fetal brain,Trans-thalamic,Op. 2,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01560_Plane3_4_of_4.png
+Patient01562_Plane3_1_of_1,1562,Fetal brain,Trans-ventricular,Op. 1,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01562_Plane3_1_of_1.png
+Patient01573_Plane3_1_of_2,1573,Fetal brain,Trans-thalamic,Op. 3,Aloka,0,D:\Fetal_Dataset\Images\Patient01573_Plane3_1_of_2.png
+Patient01573_Plane3_2_of_2,1573,Fetal brain,Trans-thalamic,Op. 3,Aloka,0,D:\Fetal_Dataset\Images\Patient01573_Plane3_2_of_2.png
+Patient01585_Plane3_1_of_1,1585,Fetal brain,Trans-thalamic,Op. 2,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01585_Plane3_1_of_1.png
+Patient01594_Plane3_1_of_1,1594,Fetal brain,Trans-ventricular,Op. 1,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01594_Plane3_1_of_1.png
+Patient01601_Plane3_1_of_1,1601,Fetal brain,Trans-cerebellum,Op. 2,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01601_Plane3_1_of_1.png
+Patient01608_Plane3_1_of_3,1608,Fetal brain,Trans-thalamic,Other,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01608_Plane3_1_of_3.png
+Patient01608_Plane3_2_of_3,1608,Fetal brain,Trans-thalamic,Other,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01608_Plane3_2_of_3.png
+Patient01608_Plane3_3_of_3,1608,Fetal brain,Trans-ventricular,Other,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01608_Plane3_3_of_3.png
+Patient01612_Plane3_2_of_3,1612,Fetal brain,Trans-thalamic,Op. 3,Aloka,0,D:\Fetal_Dataset\Images\Patient01612_Plane3_2_of_3.png
+Patient01612_Plane3_3_of_3,1612,Fetal brain,Trans-cerebellum,Op. 3,Aloka,0,D:\Fetal_Dataset\Images\Patient01612_Plane3_3_of_3.png
+Patient01613_Plane3_1_of_2,1613,Fetal brain,Trans-thalamic,Op. 3,Aloka,0,D:\Fetal_Dataset\Images\Patient01613_Plane3_1_of_2.png
+Patient01613_Plane3_2_of_2,1613,Fetal brain,Trans-cerebellum,Op. 3,Aloka,0,D:\Fetal_Dataset\Images\Patient01613_Plane3_2_of_2.png
+Patient01626_Plane3_1_of_2,1626,Fetal brain,Trans-thalamic,Other,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01626_Plane3_1_of_2.png
+Patient01626_Plane3_2_of_2,1626,Fetal brain,Trans-thalamic,Other,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01626_Plane3_2_of_2.png
+Patient01628_Plane3_1_of_4,1628,Fetal brain,Trans-ventricular,Other,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01628_Plane3_1_of_4.png
+Patient01628_Plane3_2_of_4,1628,Fetal brain,Trans-ventricular,Other,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01628_Plane3_2_of_4.png
+Patient01628_Plane3_3_of_4,1628,Fetal brain,Trans-cerebellum,Other,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01628_Plane3_3_of_4.png
+Patient01628_Plane3_4_of_4,1628,Fetal brain,Trans-thalamic,Other,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01628_Plane3_4_of_4.png
+Patient01631_Plane3_1_of_2,1631,Fetal brain,Trans-ventricular,Op. 3,Aloka,0,D:\Fetal_Dataset\Images\Patient01631_Plane3_1_of_2.png
+Patient01631_Plane3_2_of_2,1631,Fetal brain,Trans-thalamic,Op. 3,Aloka,0,D:\Fetal_Dataset\Images\Patient01631_Plane3_2_of_2.png
+Patient01641_Plane3_1_of_2,1641,Fetal brain,Trans-thalamic,Op. 1,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01641_Plane3_1_of_2.png
+Patient01641_Plane3_2_of_2,1641,Fetal brain,Trans-thalamic,Op. 1,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01641_Plane3_2_of_2.png
+Patient01645_Plane3_1_of_2,1645,Fetal brain,Trans-thalamic,Op. 2,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01645_Plane3_1_of_2.png
+Patient01645_Plane3_2_of_2,1645,Fetal brain,Trans-thalamic,Op. 2,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01645_Plane3_2_of_2.png
+Patient01669_Plane3_1_of_3,1669,Fetal brain,Trans-ventricular,Op. 1,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01669_Plane3_1_of_3.png
+Patient01669_Plane3_2_of_3,1669,Fetal brain,Trans-thalamic,Op. 1,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01669_Plane3_2_of_3.png
+Patient01669_Plane3_3_of_3,1669,Fetal brain,Trans-cerebellum,Op. 1,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01669_Plane3_3_of_3.png
+Patient01673_Plane3_1_of_1,1673,Fetal brain,Trans-ventricular,Op. 3,Aloka,0,D:\Fetal_Dataset\Images\Patient01673_Plane3_1_of_1.png
+Patient01678_Plane3_1_of_8,1678,Fetal brain,Trans-thalamic,Other,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01678_Plane3_1_of_8.png
+Patient01678_Plane3_2_of_8,1678,Fetal brain,Trans-cerebellum,Other,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01678_Plane3_2_of_8.png
+Patient01678_Plane3_3_of_8,1678,Fetal brain,Trans-cerebellum,Other,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01678_Plane3_3_of_8.png
+Patient01678_Plane3_4_of_8,1678,Fetal brain,Trans-cerebellum,Other,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01678_Plane3_4_of_8.png
+Patient01678_Plane3_5_of_8,1678,Fetal brain,Trans-cerebellum,Other,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01678_Plane3_5_of_8.png
+Patient01678_Plane3_6_of_8,1678,Fetal brain,Trans-cerebellum,Other,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01678_Plane3_6_of_8.png
+Patient01678_Plane3_7_of_8,1678,Fetal brain,Trans-thalamic,Other,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01678_Plane3_7_of_8.png
+Patient01678_Plane3_8_of_8,1678,Fetal brain,Trans-thalamic,Other,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01678_Plane3_8_of_8.png
+Patient01680_Plane3_1_of_8,1680,Fetal brain,Trans-ventricular,Other,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01680_Plane3_1_of_8.png
+Patient01680_Plane3_2_of_8,1680,Fetal brain,Trans-cerebellum,Other,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01680_Plane3_2_of_8.png
+Patient01680_Plane3_3_of_8,1680,Fetal brain,Trans-thalamic,Other,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01680_Plane3_3_of_8.png
+Patient01680_Plane3_4_of_8,1680,Fetal brain,Trans-thalamic,Other,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01680_Plane3_4_of_8.png
+Patient01680_Plane3_5_of_8,1680,Fetal brain,Trans-cerebellum,Other,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01680_Plane3_5_of_8.png
+Patient01680_Plane3_6_of_8,1680,Fetal brain,Trans-ventricular,Other,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01680_Plane3_6_of_8.png
+Patient01680_Plane3_7_of_8,1680,Fetal brain,Trans-thalamic,Other,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01680_Plane3_7_of_8.png
+Patient01680_Plane3_8_of_8,1680,Fetal brain,Trans-thalamic,Other,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01680_Plane3_8_of_8.png
+Patient01682_Plane3_1_of_6,1682,Fetal brain,Trans-thalamic,Other,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01682_Plane3_1_of_6.png
+Patient01682_Plane3_2_of_6,1682,Fetal brain,Trans-thalamic,Other,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01682_Plane3_2_of_6.png
+Patient01682_Plane3_3_of_6,1682,Fetal brain,Trans-thalamic,Other,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01682_Plane3_3_of_6.png
+Patient01682_Plane3_4_of_6,1682,Fetal brain,Trans-thalamic,Other,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01682_Plane3_4_of_6.png
+Patient01682_Plane3_5_of_6,1682,Fetal brain,Trans-thalamic,Other,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01682_Plane3_5_of_6.png
+Patient01682_Plane3_6_of_6,1682,Fetal brain,Trans-thalamic,Other,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01682_Plane3_6_of_6.png
+Patient01685_Plane3_1_of_2,1685,Fetal brain,Trans-thalamic,Op. 2,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01685_Plane3_1_of_2.png
+Patient01685_Plane3_2_of_2,1685,Fetal brain,Trans-thalamic,Op. 2,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01685_Plane3_2_of_2.png
+Patient01687_Plane3_1_of_1,1687,Fetal brain,Trans-ventricular,Op. 2,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01687_Plane3_1_of_1.png
+Patient01695_Plane3_2_of_5,1695,Fetal brain,Trans-thalamic,Other,Voluson S10,0,D:\Fetal_Dataset\Images\Patient01695_Plane3_2_of_5.png
+Patient01695_Plane3_3_of_5,1695,Fetal brain,Trans-thalamic,Other,Voluson S10,0,D:\Fetal_Dataset\Images\Patient01695_Plane3_3_of_5.png
+Patient01695_Plane3_5_of_5,1695,Fetal brain,Trans-thalamic,Other,Voluson S10,0,D:\Fetal_Dataset\Images\Patient01695_Plane3_5_of_5.png
+Patient01702_Plane3_3_of_8,1702,Fetal brain,Trans-thalamic,Op. 2,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01702_Plane3_3_of_8.png
+Patient01702_Plane3_4_of_8,1702,Fetal brain,Trans-thalamic,Op. 2,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01702_Plane3_4_of_8.png
+Patient01702_Plane3_5_of_8,1702,Fetal brain,Trans-cerebellum,Op. 2,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01702_Plane3_5_of_8.png
+Patient01702_Plane3_6_of_8,1702,Fetal brain,Trans-thalamic,Op. 2,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01702_Plane3_6_of_8.png
+Patient01702_Plane3_7_of_8,1702,Fetal brain,Trans-thalamic,Op. 2,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01702_Plane3_7_of_8.png
+Patient01702_Plane3_8_of_8,1702,Fetal brain,Trans-ventricular,Op. 2,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01702_Plane3_8_of_8.png
+Patient01710_Plane3_1_of_5,1710,Fetal brain,Trans-ventricular,Other,Voluson S10,0,D:\Fetal_Dataset\Images\Patient01710_Plane3_1_of_5.png
+Patient01710_Plane3_2_of_5,1710,Fetal brain,Trans-cerebellum,Other,Voluson S10,0,D:\Fetal_Dataset\Images\Patient01710_Plane3_2_of_5.png
+Patient01710_Plane3_3_of_5,1710,Fetal brain,Trans-thalamic,Other,Voluson S10,0,D:\Fetal_Dataset\Images\Patient01710_Plane3_3_of_5.png
+Patient01710_Plane3_4_of_5,1710,Fetal brain,Trans-ventricular,Other,Voluson S10,0,D:\Fetal_Dataset\Images\Patient01710_Plane3_4_of_5.png
+Patient01710_Plane3_5_of_5,1710,Fetal brain,Trans-thalamic,Other,Voluson S10,0,D:\Fetal_Dataset\Images\Patient01710_Plane3_5_of_5.png
+Patient01714_Plane3_2_of_2,1714,Fetal brain,Trans-thalamic,Op. 3,Aloka,0,D:\Fetal_Dataset\Images\Patient01714_Plane3_2_of_2.png
+Patient01724_Plane3_1_of_3,1724,Fetal brain,Trans-ventricular,Op. 1,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01724_Plane3_1_of_3.png
+Patient01724_Plane3_2_of_3,1724,Fetal brain,Trans-thalamic,Op. 1,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01724_Plane3_2_of_3.png
+Patient01724_Plane3_3_of_3,1724,Fetal brain,Trans-ventricular,Op. 1,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01724_Plane3_3_of_3.png
+Patient01729_Plane3_1_of_3,1729,Fetal brain,Trans-thalamic,Op. 3,Aloka,0,D:\Fetal_Dataset\Images\Patient01729_Plane3_1_of_3.png
+Patient01729_Plane3_2_of_3,1729,Fetal brain,Trans-thalamic,Op. 3,Aloka,0,D:\Fetal_Dataset\Images\Patient01729_Plane3_2_of_3.png
+Patient01729_Plane3_3_of_3,1729,Fetal brain,Trans-thalamic,Op. 3,Aloka,0,D:\Fetal_Dataset\Images\Patient01729_Plane3_3_of_3.png
+Patient01736_Plane3_1_of_2,1736,Fetal brain,Trans-thalamic,Op. 2,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01736_Plane3_1_of_2.png
+Patient01736_Plane3_2_of_2,1736,Fetal brain,Trans-thalamic,Op. 2,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01736_Plane3_2_of_2.png
+Patient01738_Plane3_1_of_2,1738,Fetal brain,Trans-thalamic,Op. 3,Aloka,0,D:\Fetal_Dataset\Images\Patient01738_Plane3_1_of_2.png
+Patient01738_Plane3_2_of_2,1738,Fetal brain,Trans-thalamic,Op. 3,Aloka,0,D:\Fetal_Dataset\Images\Patient01738_Plane3_2_of_2.png
+Patient01756_Plane3_1_of_2,1756,Fetal brain,Trans-thalamic,Op. 2,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01756_Plane3_1_of_2.png
+Patient01756_Plane3_2_of_2,1756,Fetal brain,Trans-thalamic,Op. 2,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01756_Plane3_2_of_2.png
+Patient01757_Plane3_1_of_1,1757,Fetal brain,Trans-thalamic,Op. 1,Voluson E6,0,D:\Fetal_Dataset\Images\Patient01757_Plane3_1_of_1.png
