@@ -15,7 +15,6 @@ DATABASE_URL = (
     f"{POSTGRES_USER}:{POSTGRES_PASSWORD}"
     f"@{POSTGRES_HOST}:{POSTGRES_PORT}"
     f"/{POSTGRES_DB}"
-    "?sslmode=require"
 )
 
 
