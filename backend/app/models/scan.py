@@ -5,8 +5,8 @@ from sqlalchemy import (
     Float,
     ForeignKey,
     Integer,
-    String,
     JSON,
+    String,
     func,
 )
 from sqlalchemy.orm import (
@@ -18,14 +18,27 @@ from sqlalchemy.orm import (
 from app.db.database import Base
 
 
+# =========================================================
+# SCAN MODEL
+# =========================================================
+
 class Scan(Base):
+
     __tablename__ = "scans"
+
+    # =====================================================
+    # PRIMARY KEY
+    # =====================================================
 
     id: Mapped[int] = mapped_column(
         Integer,
         primary_key=True,
         index=True,
     )
+
+    # =====================================================
+    # PATIENT
+    # =====================================================
 
     patient_id: Mapped[int] = mapped_column(
         ForeignKey(
@@ -36,16 +49,30 @@ class Scan(Base):
         index=True,
     )
 
+    # =====================================================
+    # UPLOADED BY USER
+    # =====================================================
+
     uploaded_by: Mapped[int] = mapped_column(
-        ForeignKey("users.id"),
+        ForeignKey(
+            "users.id",
+        ),
         nullable=False,
         index=True,
     )
+
+    # =====================================================
+    # IMAGE
+    # =====================================================
 
     image_filename: Mapped[str] = mapped_column(
         String(255),
         nullable=False,
     )
+
+    # =====================================================
+    # AI PREDICTION
+    # =====================================================
 
     predicted_plane: Mapped[str] = mapped_column(
         String(100),
@@ -57,17 +84,28 @@ class Scan(Base):
         nullable=False,
     )
 
-    # Complete AI analysis result
+    # =====================================================
+    # COMPLETE AI ANALYSIS
+    # =====================================================
+
     analysis_result: Mapped[dict | None] = mapped_column(
         JSON,
         nullable=True,
     )
+
+    # =====================================================
+    # TIMESTAMP
+    # =====================================================
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),
         nullable=False,
     )
+
+    # =====================================================
+    # RELATIONSHIPS
+    # =====================================================
 
     patient = relationship(
         "Patient",
@@ -76,4 +114,5 @@ class Scan(Base):
 
     user = relationship(
         "User",
+        back_populates="scans",
     )

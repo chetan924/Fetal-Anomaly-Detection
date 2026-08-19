@@ -1,16 +1,11 @@
 import { useState } from 'react';
-import {
-  Link,
-  useNavigate,
-} from 'react-router-dom';
-
-import { LogIn } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { LogIn, UserPlus } from 'lucide-react';
 
 import Button from '../components/ui/Button';
 import Card from '../components/ui/Card';
 
 import { login } from '../services/api';
-
 
 function LoginPage() {
   const navigate = useNavigate();
@@ -21,6 +16,39 @@ function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  // ============================================================
+  // ERROR MESSAGE
+  // ============================================================
+
+  const getErrorMessage = (err) => {
+    const detail = err?.response?.data?.detail;
+
+    if (typeof detail === 'string') {
+      return detail;
+    }
+
+    if (Array.isArray(detail)) {
+      return detail
+        .map((item) => {
+          if (typeof item === 'string') {
+            return item;
+          }
+
+          if (item?.msg) {
+            return item.msg;
+          }
+
+          return 'Invalid request.';
+        })
+        .join(', ');
+    }
+
+    if (typeof err?.message === 'string') {
+      return err.message;
+    }
+
+    return 'Login failed. Please check your credentials.';
+  };
 
   // ============================================================
   // LOGIN
@@ -30,22 +58,31 @@ function LoginPage() {
     event.preventDefault();
 
     setError('');
+
+    const normalizedEmail = email.trim();
+
+    if (!normalizedEmail) {
+      setError('Please enter your email address.');
+      return;
+    }
+
+    if (!password) {
+      setError('Please enter your password.');
+      return;
+    }
+
+    if (password.length < 8) {
+      setError('Password must be at least 8 characters.');
+      return;
+    }
+
     setLoading(true);
 
     try {
-      // --------------------------------------------------------
-      // LOGIN API
-      // --------------------------------------------------------
-
       const result = await login(
-        email.trim(),
+        normalizedEmail,
         password
       );
-
-
-      // --------------------------------------------------------
-      // VALIDATE TOKEN
-      // --------------------------------------------------------
 
       if (!result?.access_token) {
         throw new Error(
@@ -53,36 +90,19 @@ function LoginPage() {
         );
       }
 
-
-      // --------------------------------------------------------
-      // SAVE JWT TOKEN
-      // --------------------------------------------------------
-
       localStorage.setItem(
         'access_token',
         result.access_token
       );
 
-
-      // --------------------------------------------------------
-      // VERIFY TOKEN WAS SAVED
-      // --------------------------------------------------------
-
       const savedToken =
-        localStorage.getItem(
-          'access_token'
-        );
+        localStorage.getItem('access_token');
 
       if (!savedToken) {
         throw new Error(
           'Authentication token could not be saved.'
         );
       }
-
-
-      // --------------------------------------------------------
-      // LOGIN SUCCESS
-      // --------------------------------------------------------
 
       navigate('/', {
         replace: true,
@@ -94,18 +114,14 @@ function LoginPage() {
         err
       );
 
-      const message =
-        err.response?.data?.detail ||
-        err.message ||
-        'Login failed. Please check your credentials.';
-
-      setError(message);
+      setError(
+        getErrorMessage(err)
+      );
 
     } finally {
       setLoading(false);
     }
   };
-
 
   // ============================================================
   // UI
@@ -133,18 +149,15 @@ function LoginPage() {
 
             </div>
 
-
             <h1 className="text-2xl font-semibold text-slate-900">
               Sign in
             </h1>
-
 
             <p className="mt-2 text-sm text-slate-500">
               Sign in to access the Fetal Anomaly Detection system.
             </p>
 
           </div>
-
 
           {/* ================================================== */}
           {/* LOGIN FORM */}
@@ -155,9 +168,7 @@ function LoginPage() {
             className="space-y-5"
           >
 
-            {/* ================================================= */}
             {/* EMAIL */}
-            {/* ================================================= */}
 
             <div>
 
@@ -168,9 +179,9 @@ function LoginPage() {
                 Email
               </label>
 
-
               <input
                 id="email"
+                name="email"
                 type="email"
                 value={email}
                 onChange={(event) =>
@@ -185,10 +196,7 @@ function LoginPage() {
 
             </div>
 
-
-            {/* ================================================= */}
             {/* PASSWORD */}
-            {/* ================================================= */}
 
             <div>
 
@@ -201,9 +209,6 @@ function LoginPage() {
                   Password
                 </label>
 
-
-                {/* FORGOT PASSWORD */}
-
                 <Link
                   to="/forgot-password"
                   className="text-sm font-medium text-teal-600 transition hover:text-teal-700"
@@ -213,9 +218,9 @@ function LoginPage() {
 
               </div>
 
-
               <input
                 id="password"
+                name="password"
                 type="password"
                 value={password}
                 onChange={(event) =>
@@ -223,6 +228,7 @@ function LoginPage() {
                 }
                 placeholder="Enter your password"
                 required
+                minLength={8}
                 autoComplete="current-password"
                 disabled={loading}
                 className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-teal-500 focus:ring-2 focus:ring-teal-100 disabled:cursor-not-allowed disabled:bg-slate-100"
@@ -230,24 +236,19 @@ function LoginPage() {
 
             </div>
 
-
-            {/* ================================================= */}
             {/* ERROR */}
-            {/* ================================================= */}
 
             {error && (
               <div
                 role="alert"
+                aria-live="polite"
                 className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700"
               >
                 {error}
               </div>
             )}
 
-
-            {/* ================================================= */}
-            {/* SUBMIT */}
-            {/* ================================================= */}
+            {/* SIGN IN BUTTON */}
 
             <Button
               type="submit"
@@ -264,7 +265,6 @@ function LoginPage() {
                 className="mr-2"
               />
 
-
               {loading
                 ? 'Signing in...'
                 : 'Sign in'}
@@ -273,6 +273,41 @@ function LoginPage() {
 
           </form>
 
+          {/* ================================================== */}
+          {/* SIGN UP */}
+          {/* ================================================== */}
+
+          <div className="mt-6">
+
+            <div className="relative">
+
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-slate-200" />
+              </div>
+
+              <div className="relative flex justify-center">
+                <span className="bg-white px-3 text-xs text-slate-400">
+                  New to FetalAI?
+                </span>
+              </div>
+
+            </div>
+
+            <Link
+              to="/register"
+              className="mt-4 flex w-full items-center justify-center rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-medium text-slate-700 transition hover:border-teal-400 hover:bg-teal-50 hover:text-teal-700"
+            >
+
+              <UserPlus
+                size={18}
+                className="mr-2"
+              />
+
+              Create an account
+
+            </Link>
+
+          </div>
 
           {/* ================================================== */}
           {/* FOOTER */}
@@ -293,6 +328,5 @@ function LoginPage() {
     </main>
   );
 }
-
 
 export default LoginPage;

@@ -23,7 +23,6 @@ class User(Base):
 
     __tablename__ = "users"
 
-
     # =====================================================
     # PRIMARY KEY
     # =====================================================
@@ -32,7 +31,6 @@ class User(Base):
         primary_key=True,
         index=True,
     )
-
 
     # =====================================================
     # BASIC INFORMATION
@@ -43,14 +41,12 @@ class User(Base):
         nullable=False,
     )
 
-
     email: Mapped[str] = mapped_column(
         String(255),
         unique=True,
         index=True,
         nullable=False,
     )
-
 
     # =====================================================
     # AUTHENTICATION
@@ -60,7 +56,6 @@ class User(Base):
         String(255),
         nullable=False,
     )
-
 
     # =====================================================
     # ROLE
@@ -72,7 +67,6 @@ class User(Base):
         nullable=False,
     )
 
-
     # =====================================================
     # ACCOUNT STATUS
     # =====================================================
@@ -82,7 +76,6 @@ class User(Base):
         default=True,
         nullable=False,
     )
-
 
     # =====================================================
     # PASSWORD RESET
@@ -94,12 +87,10 @@ class User(Base):
         index=True,
     )
 
-
     reset_token_expires_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True),
         nullable=True,
     )
-
 
     # =====================================================
     # TIMESTAMPS
@@ -111,14 +102,12 @@ class User(Base):
         nullable=False,
     )
 
-
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),
         onupdate=func.now(),
         nullable=False,
     )
-
 
     # =====================================================
     # RELATIONSHIPS
@@ -128,10 +117,13 @@ class User(Base):
     #   ├── Patients created by this user
     #   └── Scans uploaded by this user
     #
-    # These relationships require:
-    #
     # Patient.created_by
+    #       ↕
+    # Patient.created_by_user
+    #
     # Scan.uploaded_by
+    #       ↕
+    # Scan.user
     #
     # =====================================================
 
@@ -139,7 +131,6 @@ class User(Base):
         "Patient",
         back_populates="created_by_user",
     )
-
 
     scans = relationship(
         "Scan",
