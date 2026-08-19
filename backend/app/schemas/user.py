@@ -13,6 +13,7 @@ from pydantic import (
 # ============================================================
 
 class UserRegister(BaseModel):
+
     full_name: str = Field(
         min_length=2,
         max_length=120,
@@ -27,10 +28,26 @@ class UserRegister(BaseModel):
 
 
 # ============================================================
+# SIGNUP OTP VERIFICATION
+# ============================================================
+
+class VerifySignupOTPRequest(BaseModel):
+
+    email: EmailStr
+
+    otp: str = Field(
+        min_length=6,
+        max_length=6,
+        pattern=r"^\d{6}$",
+    )
+
+
+# ============================================================
 # USER RESPONSE
 # ============================================================
 
 class UserResponse(BaseModel):
+
     model_config = ConfigDict(
         from_attributes=True,
     )
@@ -48,6 +65,7 @@ class UserResponse(BaseModel):
 # ============================================================
 
 class UserLogin(BaseModel):
+
     email: EmailStr
 
     password: str = Field(
@@ -57,11 +75,28 @@ class UserLogin(BaseModel):
 
 
 # ============================================================
+# LOGIN OTP VERIFICATION
+# ============================================================
+
+class VerifyLoginOTPRequest(BaseModel):
+
+    email: EmailStr
+
+    otp: str = Field(
+        min_length=6,
+        max_length=6,
+        pattern=r"^\d{6}$",
+    )
+
+
+# ============================================================
 # TOKEN RESPONSE
 # ============================================================
 
 class TokenResponse(BaseModel):
+
     access_token: str
+
     token_type: str = "bearer"
 
 
@@ -70,14 +105,51 @@ class TokenResponse(BaseModel):
 # ============================================================
 
 class ForgotPasswordRequest(BaseModel):
+
     email: EmailStr
 
 
 # ============================================================
-# RESET PASSWORD
+# FORGOT PASSWORD OTP VERIFICATION
+# ============================================================
+
+class VerifyForgotPasswordOTPRequest(BaseModel):
+
+    email: EmailStr
+
+    otp: str = Field(
+        min_length=6,
+        max_length=6,
+        pattern=r"^\d{6}$",
+    )
+
+
+# ============================================================
+# RESET PASSWORD WITH OTP
+# ============================================================
+
+class ResetPasswordWithOTPRequest(BaseModel):
+
+    email: EmailStr
+
+    otp: str = Field(
+        min_length=6,
+        max_length=6,
+        pattern=r"^\d{6}$",
+    )
+
+    new_password: str = Field(
+        min_length=8,
+        max_length=128,
+    )
+
+
+# ============================================================
+# RESET PASSWORD WITH TOKEN
 # ============================================================
 
 class ResetPasswordRequest(BaseModel):
+
     token: str = Field(
         min_length=20,
         max_length=500,
@@ -94,6 +166,7 @@ class ResetPasswordRequest(BaseModel):
 # ============================================================
 
 class ChangePasswordRequest(BaseModel):
+
     current_password: str = Field(
         min_length=8,
         max_length=128,
@@ -103,3 +176,4 @@ class ChangePasswordRequest(BaseModel):
         min_length=8,
         max_length=128,
     )
+    

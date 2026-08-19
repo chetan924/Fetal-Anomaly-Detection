@@ -7,6 +7,7 @@ import Layout from './components/layout/Layout';
 // ============================================================
 
 import LoginPage from './pages/LoginPage';
+import RegisterPage from './pages/RegisterPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
 
@@ -30,12 +31,41 @@ import HelpPage from './pages/HelpPage';
 // ============================================================
 
 function ProtectedRoute({ children }) {
-  const token = localStorage.getItem('access_token');
+  const token = localStorage.getItem(
+    'access_token'
+  );
 
   if (!token) {
     return (
       <Navigate
         to="/login"
+        replace
+      />
+    );
+  }
+
+  return children;
+}
+
+
+// ============================================================
+// PUBLIC ROUTE
+// ============================================================
+
+function PublicRoute({ children }) {
+  const token = localStorage.getItem(
+    'access_token'
+  );
+
+  /*
+   * If the user is already logged in,
+   * don't allow them to stay on login/register pages.
+   */
+
+  if (token) {
+    return (
+      <Navigate
+        to="/"
         replace
       />
     );
@@ -54,30 +84,62 @@ function App() {
     <Routes>
 
       {/* ======================================================
-          PUBLIC ROUTES
+          PUBLIC AUTHENTICATION ROUTES
       ====================================================== */}
 
-      {/* Login */}
+      {/* ====================================================
+          LOGIN
+      ==================================================== */}
 
       <Route
         path="/login"
-        element={<LoginPage />}
+        element={
+          <PublicRoute>
+            <LoginPage />
+          </PublicRoute>
+        }
       />
 
 
-      {/* Forgot Password */}
+      {/* ====================================================
+          REGISTER
+      ==================================================== */}
+
+      <Route
+        path="/register"
+        element={
+          <PublicRoute>
+            <RegisterPage />
+          </PublicRoute>
+        }
+      />
+
+
+      {/* ====================================================
+          FORGOT PASSWORD
+      ==================================================== */}
 
       <Route
         path="/forgot-password"
-        element={<ForgotPasswordPage />}
+        element={
+          <PublicRoute>
+            <ForgotPasswordPage />
+          </PublicRoute>
+        }
       />
 
 
-      {/* Reset Password */}
+      {/* ====================================================
+          RESET PASSWORD
+      ==================================================== */}
 
       <Route
         path="/reset-password"
-        element={<ResetPasswordPage />}
+        element={
+          <PublicRoute>
+            <ResetPasswordPage />
+          </PublicRoute>
+        }
       />
 
 
@@ -175,7 +237,7 @@ function App() {
 
 
         {/* ====================================================
-            SETTINGS / DOCTOR PROFILE
+            SETTINGS
         ==================================================== */}
 
         <Route
@@ -185,7 +247,7 @@ function App() {
 
 
         {/* ====================================================
-            HELP & SUPPORT
+            HELP
         ==================================================== */}
 
         <Route
