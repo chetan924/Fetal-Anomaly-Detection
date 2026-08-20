@@ -31,8 +31,8 @@ from app.models.scan import Scan
 # =========================================================
 
 # config.py already loads backend/.env explicitly.
-# load_dotenv() is retained as a harmless fallback for
-# the process environment.
+# load_dotenv() is retained as a harmless fallback
+# for the process environment.
 load_dotenv()
 
 
@@ -60,7 +60,6 @@ APP_DIR = (
     .parent
 )
 
-
 BACKEND_ROOT = (
     APP_DIR.parent
 )
@@ -75,12 +74,10 @@ STORAGE_DIR = (
     / "storage"
 )
 
-
 SCAN_STORAGE_DIR = (
     STORAGE_DIR
     / "scans"
 )
-
 
 EXPLAINABILITY_STORAGE_DIR = (
     STORAGE_DIR
@@ -97,12 +94,10 @@ STORAGE_DIR.mkdir(
     exist_ok=True,
 )
 
-
 SCAN_STORAGE_DIR.mkdir(
     parents=True,
     exist_ok=True,
 )
-
 
 EXPLAINABILITY_STORAGE_DIR.mkdir(
     parents=True,
@@ -113,11 +108,10 @@ EXPLAINABILITY_STORAGE_DIR.mkdir(
 # =========================================================
 # STORAGE DEBUG INFORMATION
 # =========================================================
-#
+
 # Do not print secrets or user data here.
 # Paths are safe to expose in development logs.
 # Keep production logs quieter.
-# =========================================================
 
 if ENVIRONMENT != "production":
 
@@ -199,9 +193,20 @@ Base.metadata.create_all(
 # CORS CONFIGURATION
 # =========================================================
 
+# Production frontend
 allowed_origins = [
-    FRONTEND_URL,
+    "https://fetal-anomaly-detection.onrender.com",
 ]
+
+
+# =========================================================
+# FRONTEND_URL FROM CONFIG
+# =========================================================
+
+if FRONTEND_URL:
+    allowed_origins.append(
+        FRONTEND_URL.strip()
+    )
 
 
 # =========================================================
@@ -268,16 +273,13 @@ app.include_router(
     auth_router
 )
 
-
 app.include_router(
     patients_router
 )
 
-
 app.include_router(
     ai_router
 )
-
 
 app.include_router(
     scans_router
