@@ -1,47 +1,23 @@
 # ============================================================
 # FETALAI EMAIL SERVICE
+# RESEND HTTP API
 # ============================================================
 
-import os
-import smtplib
-from email.message import EmailMessage
+import requests
 
 
 # ============================================================
-# SMTP CONFIGURATION
+# RESEND CONFIGURATION
 # ============================================================
 
-SMTP_HOST = os.getenv(
-    "SMTP_HOST",
-    "smtp.gmail.com",
+from app.core.config import (
+    RESEND_API_KEY,
+    RESEND_FROM_EMAIL,
+    RESEND_FROM_NAME,
 )
 
-SMTP_PORT = int(
-    os.getenv(
-        "SMTP_PORT",
-        "587",
-    )
-)
 
-SMTP_USERNAME = os.getenv(
-    "SMTP_USERNAME",
-    "",
-).strip()
-
-SMTP_PASSWORD = os.getenv(
-    "SMTP_PASSWORD",
-    "",
-).strip()
-
-SMTP_FROM_EMAIL = os.getenv(
-    "SMTP_FROM_EMAIL",
-    SMTP_USERNAME,
-).strip()
-
-SMTP_FROM_NAME = os.getenv(
-    "SMTP_FROM_NAME",
-    "FetalAI Clinical AI Platform",
-).strip()
+RESEND_API_URL = "https://api.resend.com/emails"
 
 
 # ============================================================
@@ -53,20 +29,29 @@ def send_email(
     subject: str,
     body: str,
 ) -> None:
+    """
+    Send email using Resend HTTP API.
 
-    if not SMTP_USERNAME:
+    No SMTP connection is used.
+    """
+
+    # --------------------------------------------------------
+    # Validate configuration
+    # --------------------------------------------------------
+
+    if not RESEND_API_KEY:
         raise RuntimeError(
-            "SMTP_USERNAME is not configured."
+            "RESEND_API_KEY is not configured."
         )
 
-    if not SMTP_PASSWORD:
+    if not RESEND_FROM_EMAIL:
         raise RuntimeError(
-            "SMTP_PASSWORD is not configured."
+            "RESEND_FROM_EMAIL is not configured."
         )
 
-    if not SMTP_FROM_EMAIL:
+    if not RESEND_FROM_NAME:
         raise RuntimeError(
-            "SMTP_FROM_EMAIL is not configured."
+            "RESEND_FROM_NAME is not configured."
         )
 
     if not to_email:
@@ -74,57 +59,64 @@ def send_email(
             "Recipient email is required."
         )
 
-    message = EmailMessage()
+    # --------------------------------------------------------
+    # Prepare request
+    # --------------------------------------------------------
 
-    message["From"] = (
-        f"{SMTP_FROM_NAME} <{SMTP_FROM_EMAIL}>"
-    )
+    payload = {
+        "from": (
+            f"{RESEND_FROM_NAME} "
+            f"<{RESEND_FROM_EMAIL}>"
+        ),
+        "to": [
+            to_email.strip()
+        ],
+        "subject": subject,
+        "text": body,
+    }
 
-    message["To"] = to_email.strip()
+    headers = {
+        "Authorization": (
+            f"Bearer {RESEND_API_KEY}"
+        ),
+        "Content-Type": "application/json",
+    }
 
-    message["Subject"] = subject
-
-    message.set_content(body)
+    # --------------------------------------------------------
+    # Send through Resend HTTP API
+    # --------------------------------------------------------
 
     try:
 
-        with smtplib.SMTP(
-            SMTP_HOST,
-            SMTP_PORT,
+        response = requests.post(
+            RESEND_API_URL,
+            json=payload,
+            headers=headers,
             timeout=30,
-        ) as server:
+        )
 
-            server.ehlo()
-
-            server.starttls()
-
-            server.ehlo()
-
-            server.login(
-                SMTP_USERNAME,
-                SMTP_PASSWORD,
-            )
-
-            server.send_message(message)
-
-    except smtplib.SMTPAuthenticationError as exc:
+    except requests.RequestException as exc:
 
         raise RuntimeError(
-            "SMTP authentication failed. "
-            "Check the Gmail address and App Password."
+            "Unable to connect to Resend email API."
         ) from exc
 
-    except smtplib.SMTPException as exc:
+    # --------------------------------------------------------
+    # Handle Resend errors
+    # --------------------------------------------------------
+
+    if not response.ok:
+
+        try:
+            error_data = response.json()
+        except ValueError:
+            error_data = response.text
 
         raise RuntimeError(
-            f"SMTP email sending failed: {exc}"
-        ) from exc
-
-    except OSError as exc:
-
-        raise RuntimeError(
-            f"Unable to connect to SMTP server: {exc}"
-        ) from exc
+            "Resend email API failed: "
+            f"HTTP {response.status_code} - "
+            f"{error_data}"
+        )
 
 
 # ============================================================
@@ -136,10 +128,17 @@ def send_otp_email(
     otp: str,
     purpose: str = "verification",
 ) -> None:
+    """
+    Send OTP email using Resend.
+    """
 
     normalized_purpose = (
         purpose or "verification"
     ).strip().lower()
+
+    # --------------------------------------------------------
+    # LOGIN OTP
+    # --------------------------------------------------------
 
     if normalized_purpose in {
         "login",
@@ -162,6 +161,10 @@ def send_otp_email(
             "FetalAI Clinical AI Platform"
         )
 
+    # --------------------------------------------------------
+    # SIGNUP OTP
+    # --------------------------------------------------------
+
     elif normalized_purpose in {
         "signup",
         "register",
@@ -181,6 +184,10 @@ def send_otp_email(
             "Please do not share this code with anyone.\n\n"
             "FetalAI Clinical AI Platform"
         )
+
+    # --------------------------------------------------------
+    # PASSWORD RESET OTP
+    # --------------------------------------------------------
 
     elif normalized_purpose in {
         "forgot_password",
@@ -203,6 +210,10 @@ def send_otp_email(
             "FetalAI Clinical AI Platform"
         )
 
+    # --------------------------------------------------------
+    # GENERIC OTP
+    # --------------------------------------------------------
+
     else:
 
         subject = (
@@ -216,6 +227,10 @@ def send_otp_email(
             "Please do not share this code with anyone.\n\n"
             "FetalAI Clinical AI Platform"
         )
+
+    # --------------------------------------------------------
+    # SEND
+    # --------------------------------------------------------
 
     send_email(
         to_email=to_email,

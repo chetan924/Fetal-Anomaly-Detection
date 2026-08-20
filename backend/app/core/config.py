@@ -194,13 +194,15 @@ try:
     )
 except ValueError as exc:
     raise RuntimeError(
-        "ACCESS_TOKEN_EXPIRE_MINUTES must be a valid integer."
+        "ACCESS_TOKEN_EXPIRE_MINUTES "
+        "must be a valid integer."
     ) from exc
 
 
 if ACCESS_TOKEN_EXPIRE_MINUTES <= 0:
     raise RuntimeError(
-        "ACCESS_TOKEN_EXPIRE_MINUTES must be greater than 0."
+        "ACCESS_TOKEN_EXPIRE_MINUTES "
+        "must be greater than 0."
     )
 
 
@@ -223,91 +225,45 @@ if JWT_ALGORITHM not in SUPPORTED_JWT_ALGORITHMS:
 
 
 # =========================================================
-# SMTP / EMAIL
+# RESEND EMAIL API
 # =========================================================
 #
+# Resend uses HTTPS API.
+#
 # IMPORTANT:
-# Keep this section OUTSIDE any environment-specific
-# conditional block so SMTP configuration is available
-# in development, testing, and production.
+# No SMTP_HOST
+# No SMTP_PORT
+# No SMTP_USERNAME
+# No SMTP_PASSWORD
+#
+# This removes SMTP port 587 dependency from Render.
 # =========================================================
 
-SMTP_HOST = os.getenv(
-    "SMTP_HOST",
-    "smtp.gmail.com",
-).strip()
-
-
-try:
-    SMTP_PORT = int(
-        os.getenv(
-            "SMTP_PORT",
-            "587",
-        )
-    )
-except ValueError as exc:
-    raise RuntimeError(
-        "SMTP_PORT must be a valid integer."
-    ) from exc
-
-
-if not 1 <= SMTP_PORT <= 65535:
-    raise RuntimeError(
-        "SMTP_PORT must be between 1 and 65535."
-    )
-
-
-SMTP_USERNAME = os.getenv(
-    "SMTP_USERNAME",
+RESEND_API_KEY = os.getenv(
+    "RESEND_API_KEY",
     "",
 ).strip()
 
 
-SMTP_PASSWORD = os.getenv(
-    "SMTP_PASSWORD",
+RESEND_FROM_EMAIL = os.getenv(
+    "RESEND_FROM_EMAIL",
     "",
-)
-
-
-SMTP_FROM_EMAIL = os.getenv(
-    "SMTP_FROM_EMAIL",
-    SMTP_USERNAME,
 ).strip()
 
 
-SMTP_FROM_NAME = os.getenv(
-    "SMTP_FROM_NAME",
+RESEND_FROM_NAME = os.getenv(
+    "RESEND_FROM_NAME",
     "FetalAI Clinical AI Platform",
 ).strip()
 
 
-if not SMTP_HOST:
+# =========================================================
+# RESEND VALIDATION
+# =========================================================
+
+if not RESEND_FROM_NAME:
     raise RuntimeError(
-        "SMTP_HOST must not be empty."
-    )
-
-
-if not SMTP_USERNAME:
-    raise RuntimeError(
-        "SMTP_USERNAME must be set."
-    )
-
-
-if not SMTP_PASSWORD:
-    raise RuntimeError(
-        "SMTP_PASSWORD must be set."
-    )
-
-
-if not SMTP_FROM_EMAIL:
-    raise RuntimeError(
-        "SMTP_FROM_EMAIL must not be empty."
-    )
-
-
-if not SMTP_FROM_NAME:
-    raise RuntimeError(
-        "SMTP_FROM_NAME must not be empty."
+        "RESEND_FROM_NAME must not be empty."
     )
 
 
@@ -338,10 +294,11 @@ if ENVIRONMENT == "production":
         "change-me-in-production",
         "secret",
         "secret-key",
+        "YOUR_32_PLUS_CHARACTER_SECRET",
     }:
         raise RuntimeError(
-            "A default/insecure JWT secret cannot be used "
-            "in production."
+            "A default/insecure JWT secret cannot "
+            "be used in production."
         )
 
 
@@ -351,7 +308,8 @@ if ENVIRONMENT == "production":
 
     if not POSTGRES_PASSWORD:
         raise RuntimeError(
-            "POSTGRES_PASSWORD must be set in production."
+            "POSTGRES_PASSWORD must be set "
+            "in production."
         )
 
 
@@ -363,29 +321,26 @@ if ENVIRONMENT == "production":
         "https://"
     ):
         raise RuntimeError(
-            "FRONTEND_URL must use HTTPS in production."
+            "FRONTEND_URL must use HTTPS "
+            "in production."
         )
 
 
     # -----------------------------------------------------
-    # SMTP
+    # RESEND
     # -----------------------------------------------------
 
-    if not SMTP_USERNAME:
+    if not RESEND_API_KEY:
         raise RuntimeError(
-            "SMTP_USERNAME must be set in production."
+            "RESEND_API_KEY must be set "
+            "in production."
         )
 
 
-    if not SMTP_PASSWORD:
+    if not RESEND_FROM_EMAIL:
         raise RuntimeError(
-            "SMTP_PASSWORD must be set in production."
-        )
-
-
-    if not SMTP_FROM_EMAIL:
-        raise RuntimeError(
-            "SMTP_FROM_EMAIL must be set in production."
+            "RESEND_FROM_EMAIL must be set "
+            "in production."
         )
 
 
@@ -393,10 +348,10 @@ if ENVIRONMENT == "production":
 # CONFIGURATION SUMMARY
 # =========================================================
 #
-# Never print:
+# NEVER print:
 # - PostgreSQL password
 # - JWT secret
-# - SMTP password
+# - Resend API key
 #
 # =========================================================
 
@@ -486,38 +441,20 @@ print(
 
 
 print(
-    "SMTP host:",
-    SMTP_HOST,
+    "Resend API key configured:",
+    bool(RESEND_API_KEY),
 )
 
 
 print(
-    "SMTP port:",
-    SMTP_PORT,
+    "Resend from email:",
+    RESEND_FROM_EMAIL,
 )
 
 
 print(
-    "SMTP username configured:",
-    bool(SMTP_USERNAME),
-)
-
-
-print(
-    "SMTP password configured:",
-    bool(SMTP_PASSWORD),
-)
-
-
-print(
-    "SMTP from email:",
-    SMTP_FROM_EMAIL,
-)
-
-
-print(
-    "SMTP from name:",
-    SMTP_FROM_NAME,
+    "Resend from name:",
+    RESEND_FROM_NAME,
 )
 
 
