@@ -194,19 +194,28 @@ Base.metadata.create_all(
 # =========================================================
 
 # Production frontend
-allowed_origins = [
+allowed_origins = {
     "https://fetal-anomaly-detection.onrender.com",
-]
+}
 
 
 # =========================================================
-# FRONTEND_URL FROM CONFIG
+# FRONTEND URL FROM CONFIG
 # =========================================================
 
 if FRONTEND_URL:
-    allowed_origins.append(
-        FRONTEND_URL.strip()
+
+    frontend_origin = (
+        FRONTEND_URL
+        .strip()
+        .rstrip("/")
     )
+
+    if frontend_origin:
+
+        allowed_origins.add(
+            frontend_origin
+        )
 
 
 # =========================================================
@@ -215,26 +224,49 @@ if FRONTEND_URL:
 
 if ENVIRONMENT != "production":
 
-    allowed_origins.extend(
-        [
+    allowed_origins.update(
+        {
             "http://localhost:5173",
             "http://127.0.0.1:5173",
-        ]
+        }
     )
 
 
 # =========================================================
-# REMOVE DUPLICATE / EMPTY ORIGINS
+# FINAL CORS ORIGINS
 # =========================================================
 
 allowed_origins = list(
-    dict.fromkeys(
-        origin.strip()
-        for origin in allowed_origins
-        if origin
-        and origin.strip()
-    )
+    allowed_origins
 )
+
+
+# =========================================================
+# CORS DEBUG INFORMATION
+# =========================================================
+
+print()
+print("=" * 60)
+print("FETALAI CORS CONFIGURATION")
+print("=" * 60)
+
+print(
+    "Environment:",
+    ENVIRONMENT,
+)
+
+print(
+    "Frontend URL:",
+    FRONTEND_URL,
+)
+
+print(
+    "Allowed origins:",
+    allowed_origins,
+)
+
+print("=" * 60)
+print()
 
 
 # =========================================================
@@ -258,9 +290,7 @@ app.add_middleware(
     ],
 
     allow_headers=[
-        "Authorization",
-        "Content-Type",
-        "Accept",
+        "*",
     ],
 )
 
