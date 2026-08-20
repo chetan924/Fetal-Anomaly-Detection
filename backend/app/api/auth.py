@@ -7,6 +7,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.api.dependencies import get_current_user
+from app.core.config import LOGIN_OTP_ENABLED
 from app.core.email import send_otp_email
 from app.core.security import (
     create_access_token,
@@ -451,6 +452,16 @@ def login_user(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="User account is inactive",
         )
+
+    if not LOGIN_OTP_ENABLED:
+        access_token = create_access_token(
+            str(user.id)
+        )
+
+        return {
+            "access_token": access_token,
+            "token_type": "bearer",
+        }
 
     try:
         raw_otp, _ = create_otp_record(

@@ -201,6 +201,21 @@ if ACCESS_TOKEN_EXPIRE_MINUTES <= 0:
 
 
 # =========================================================
+# LOGIN OTP
+# =========================================================
+
+LOGIN_OTP_ENABLED = os.getenv(
+    "LOGIN_OTP_ENABLED",
+    "false",
+).strip().lower() in {
+    "1",
+    "true",
+    "yes",
+    "on",
+}
+
+
+# =========================================================
 # JWT SECURITY VALIDATION
 # =========================================================
 
@@ -433,6 +448,12 @@ print(
     "Access token expiry:",
     ACCESS_TOKEN_EXPIRE_MINUTES,
     "minutes",
+)
+
+
+print(
+    "Login OTP enabled:",
+    LOGIN_OTP_ENABLED,
 )
 
 
