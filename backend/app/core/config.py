@@ -154,7 +154,9 @@ if not POSTGRES_HOST:
 
 
 try:
-    _postgres_port = int(POSTGRES_PORT)
+    _postgres_port = int(
+        POSTGRES_PORT
+    )
 except ValueError as exc:
     raise RuntimeError(
         "POSTGRES_PORT must be a valid integer."
@@ -203,7 +205,7 @@ if ACCESS_TOKEN_EXPIRE_MINUTES <= 0:
 
 
 # =========================================================
-# SECURITY VALIDATION
+# JWT SECURITY VALIDATION
 # =========================================================
 
 SUPPORTED_JWT_ALGORITHMS = {
@@ -220,10 +222,104 @@ if JWT_ALGORITHM not in SUPPORTED_JWT_ALGORITHMS:
     )
 
 
-# Development may use an empty secret temporarily because
-# the existing local development workflow can provide it
-# later. Production must always use a strong secret.
+# =========================================================
+# SMTP / EMAIL
+# =========================================================
+#
+# IMPORTANT:
+# Keep this section OUTSIDE any environment-specific
+# conditional block so SMTP configuration is available
+# in development, testing, and production.
+# =========================================================
+
+SMTP_HOST = os.getenv(
+    "SMTP_HOST",
+    "smtp.gmail.com",
+).strip()
+
+
+try:
+    SMTP_PORT = int(
+        os.getenv(
+            "SMTP_PORT",
+            "587",
+        )
+    )
+except ValueError as exc:
+    raise RuntimeError(
+        "SMTP_PORT must be a valid integer."
+    ) from exc
+
+
+if not 1 <= SMTP_PORT <= 65535:
+    raise RuntimeError(
+        "SMTP_PORT must be between 1 and 65535."
+    )
+
+
+SMTP_USERNAME = os.getenv(
+    "SMTP_USERNAME",
+    "",
+).strip()
+
+
+SMTP_PASSWORD = os.getenv(
+    "SMTP_PASSWORD",
+    "",
+)
+
+
+SMTP_FROM_EMAIL = os.getenv(
+    "SMTP_FROM_EMAIL",
+    SMTP_USERNAME,
+).strip()
+
+
+SMTP_FROM_NAME = os.getenv(
+    "SMTP_FROM_NAME",
+    "FetalAI Clinical AI Platform",
+).strip()
+
+
+if not SMTP_HOST:
+    raise RuntimeError(
+        "SMTP_HOST must not be empty."
+    )
+
+
+if not SMTP_USERNAME:
+    raise RuntimeError(
+        "SMTP_USERNAME must be set."
+    )
+
+
+if not SMTP_PASSWORD:
+    raise RuntimeError(
+        "SMTP_PASSWORD must be set."
+    )
+
+
+if not SMTP_FROM_EMAIL:
+    raise RuntimeError(
+        "SMTP_FROM_EMAIL must not be empty."
+    )
+
+
+if not SMTP_FROM_NAME:
+    raise RuntimeError(
+        "SMTP_FROM_NAME must not be empty."
+    )
+
+
+# =========================================================
+# PRODUCTION SECURITY VALIDATION
+# =========================================================
+
 if ENVIRONMENT == "production":
+
+    # -----------------------------------------------------
+    # JWT SECRET
+    # -----------------------------------------------------
 
     if not JWT_SECRET_KEY:
         raise RuntimeError(
@@ -249,9 +345,47 @@ if ENVIRONMENT == "production":
         )
 
 
+    # -----------------------------------------------------
+    # DATABASE PASSWORD
+    # -----------------------------------------------------
+
     if not POSTGRES_PASSWORD:
         raise RuntimeError(
             "POSTGRES_PASSWORD must be set in production."
+        )
+
+
+    # -----------------------------------------------------
+    # FRONTEND URL
+    # -----------------------------------------------------
+
+    if not FRONTEND_URL.startswith(
+        "https://"
+    ):
+        raise RuntimeError(
+            "FRONTEND_URL must use HTTPS in production."
+        )
+
+
+    # -----------------------------------------------------
+    # SMTP
+    # -----------------------------------------------------
+
+    if not SMTP_USERNAME:
+        raise RuntimeError(
+            "SMTP_USERNAME must be set in production."
+        )
+
+
+    if not SMTP_PASSWORD:
+        raise RuntimeError(
+            "SMTP_PASSWORD must be set in production."
+        )
+
+
+    if not SMTP_FROM_EMAIL:
+        raise RuntimeError(
+            "SMTP_FROM_EMAIL must be set in production."
         )
 
 
@@ -259,118 +393,133 @@ if ENVIRONMENT == "production":
 # CONFIGURATION SUMMARY
 # =========================================================
 #
-# Never print passwords or JWT secrets.
+# Never print:
+# - PostgreSQL password
+# - JWT secret
+# - SMTP password
+#
 # =========================================================
 
-if ENVIRONMENT != "production":
-
-    print()
-    print("=" * 60)
-    print("FETALAI CONFIGURATION")
-    print("=" * 60)
-
-    print(
-        "Environment:",
-        ENVIRONMENT,
-    )
-
-    print(
-        "Project root:",
-        PROJECT_ROOT,
-    )
-
-    print(
-        "Environment file:",
-        ENV_FILE,
-    )
-
-    print(
-        "Environment file exists:",
-        ENV_FILE.exists(),
-    )
-
-    print(
-        "API host:",
-        API_HOST,
-    )
-
-    print(
-        "API port:",
-        API_PORT,
-    )
-
-    print(
-        "Frontend URL:",
-        FRONTEND_URL,
-    )
-
-    print(
-        "PostgreSQL host:",
-        POSTGRES_HOST,
-    )
-
-    print(
-        "PostgreSQL port:",
-        POSTGRES_PORT,
-    )
-
-    print(
-        "PostgreSQL database:",
-        POSTGRES_DB,
-    )
-
-    print(
-        "PostgreSQL user:",
-        POSTGRES_USER,
-    )
-
-    print(
-        "JWT algorithm:",
-        JWT_ALGORITHM,
-    )
-
-    print(
-        "Access token expiry:",
-        ACCESS_TOKEN_EXPIRE_MINUTES,
-        "minutes",
-    )
-
-    print("=" * 60)
-    print()
+print()
+print("=" * 60)
+print("FETALAI CONFIGURATION")
+print("=" * 60)
 
 
-    # ============================================================
-# SMTP / EMAIL
-# ============================================================
-
-SMTP_HOST = os.getenv(
-    "SMTP_HOST",
-    "smtp.gmail.com",
-).strip()
-
-SMTP_PORT = int(
-    os.getenv(
-        "SMTP_PORT",
-        "587",
-    )
+print(
+    "Environment:",
+    ENVIRONMENT,
 )
 
-SMTP_USERNAME = os.getenv(
-    "SMTP_USERNAME",
-    "",
-).strip()
 
-SMTP_PASSWORD = os.getenv(
-    "SMTP_PASSWORD",
-    "",
+print(
+    "Project root:",
+    PROJECT_ROOT,
 )
 
-SMTP_FROM_EMAIL = os.getenv(
-    "SMTP_FROM_EMAIL",
-    SMTP_USERNAME,
-).strip()
 
-SMTP_FROM_NAME = os.getenv(
-    "SMTP_FROM_NAME",
-    "FetalAI Clinical AI Platform",
-).strip()
+print(
+    "Environment file:",
+    ENV_FILE,
+)
+
+
+print(
+    "Environment file exists:",
+    ENV_FILE.exists(),
+)
+
+
+print(
+    "API host:",
+    API_HOST,
+)
+
+
+print(
+    "API port:",
+    API_PORT,
+)
+
+
+print(
+    "Frontend URL:",
+    FRONTEND_URL,
+)
+
+
+print(
+    "PostgreSQL host:",
+    POSTGRES_HOST,
+)
+
+
+print(
+    "PostgreSQL port:",
+    POSTGRES_PORT,
+)
+
+
+print(
+    "PostgreSQL database:",
+    POSTGRES_DB,
+)
+
+
+print(
+    "PostgreSQL user:",
+    POSTGRES_USER,
+)
+
+
+print(
+    "JWT algorithm:",
+    JWT_ALGORITHM,
+)
+
+
+print(
+    "Access token expiry:",
+    ACCESS_TOKEN_EXPIRE_MINUTES,
+    "minutes",
+)
+
+
+print(
+    "SMTP host:",
+    SMTP_HOST,
+)
+
+
+print(
+    "SMTP port:",
+    SMTP_PORT,
+)
+
+
+print(
+    "SMTP username configured:",
+    bool(SMTP_USERNAME),
+)
+
+
+print(
+    "SMTP password configured:",
+    bool(SMTP_PASSWORD),
+)
+
+
+print(
+    "SMTP from email:",
+    SMTP_FROM_EMAIL,
+)
+
+
+print(
+    "SMTP from name:",
+    SMTP_FROM_NAME,
+)
+
+
+print("=" * 60)
+print()
