@@ -16,11 +16,7 @@ from dotenv import load_dotenv
 # parents[2] -> backend
 # =========================================================
 
-PROJECT_ROOT = (
-    Path(__file__)
-    .resolve()
-    .parents[2]
-)
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
 
 # =========================================================
@@ -30,9 +26,7 @@ PROJECT_ROOT = (
 ENV_FILE = PROJECT_ROOT / ".env"
 
 if ENV_FILE.exists():
-    load_dotenv(
-        dotenv_path=ENV_FILE
-    )
+    load_dotenv(dotenv_path=ENV_FILE)
 
 
 # =========================================================
@@ -228,15 +222,17 @@ if JWT_ALGORITHM not in SUPPORTED_JWT_ALGORITHMS:
 # RESEND EMAIL API
 # =========================================================
 #
-# Resend uses HTTPS API.
+# Resend uses HTTPS.
 #
-# IMPORTANT:
-# No SMTP_HOST
-# No SMTP_PORT
-# No SMTP_USERNAME
-# No SMTP_PASSWORD
+# There is NO SMTP dependency here.
 #
-# This removes SMTP port 587 dependency from Render.
+# We intentionally do NOT use:
+# - SMTP_HOST
+# - SMTP_PORT
+# - SMTP_USERNAME
+# - SMTP_PASSWORD
+#
+# This avoids SMTP port 587 dependency on Render.
 # =========================================================
 
 RESEND_API_KEY = os.getenv(
@@ -258,7 +254,7 @@ RESEND_FROM_NAME = os.getenv(
 
 
 # =========================================================
-# RESEND VALIDATION
+# RESEND BASIC VALIDATION
 # =========================================================
 
 if not RESEND_FROM_NAME:
@@ -327,7 +323,7 @@ if ENVIRONMENT == "production":
 
 
     # -----------------------------------------------------
-    # RESEND
+    # RESEND API
     # -----------------------------------------------------
 
     if not RESEND_API_KEY:
