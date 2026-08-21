@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import {
@@ -54,11 +54,10 @@ function DashboardPage() {
       setLoading(true);
       setError('');
 
-      const [patientsResult, scansResult, healthResult] =
+      const [patientsResult, scansResult] =
         await Promise.all([
           getPatients(),
           getScans(),
-          healthCheck(),
         ]);
 
       setPatients(
@@ -73,14 +72,8 @@ function DashboardPage() {
           : scansResult?.scans || []
       );
 
-      // /health currently returns a successful response such as:
-      // { message: "FetalAI backend is running" }.
-      // A successful request is therefore the reliable online signal.
-      setBackendStatus(
-        healthResult
-          ? 'Online'
-          : 'Unavailable'
-      );
+      setBackendStatus('Online');
+
     } catch (err) {
       console.error(err);
 

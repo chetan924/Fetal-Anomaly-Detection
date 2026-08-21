@@ -1,6 +1,8 @@
 import hashlib
+import logging
 import secrets
 from datetime import datetime, timedelta, timezone
+
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
@@ -214,6 +216,9 @@ def verify_otp(
     return otp
 
 
+logger = logging.getLogger(__name__)
+
+
 def send_generated_otp_email(
     *,
     email: str,
@@ -228,6 +233,11 @@ def send_generated_otp_email(
         )
 
     except Exception as exc:
+        logger.error(
+            "Failed to send %s OTP email: %s",
+            purpose,
+            str(exc),
+        )
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail=(
@@ -236,6 +246,7 @@ def send_generated_otp_email(
                 "and try again."
             ),
         ) from exc
+
 
 
 def hash_reset_token(token: str) -> str:

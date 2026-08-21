@@ -1,9 +1,7 @@
-# ============================================================
-# FETALAI EMAIL SERVICE
-# RESEND HTTP API
-# ============================================================
-
+import logging
 import requests
+
+logger = logging.getLogger(__name__)
 
 
 # ============================================================
@@ -63,11 +61,17 @@ def send_email(
     # Prepare request
     # --------------------------------------------------------
 
+    from_email_str = RESEND_FROM_EMAIL.strip()
+
+    if "<" in from_email_str:
+        from_header = from_email_str
+    elif RESEND_FROM_NAME:
+        from_header = f"{RESEND_FROM_NAME} <{from_email_str}>"
+    else:
+        from_header = from_email_str
+
     payload = {
-        "from": (
-            f"{RESEND_FROM_NAME} "
-            f"<{RESEND_FROM_EMAIL}>"
-        ),
+        "from": from_header,
         "to": [
             to_email.strip()
         ],
@@ -96,6 +100,7 @@ def send_email(
         )
 
     except requests.RequestException as exc:
+        logger.error("Unable to connect to Resend email API: %s", exc)
 
         raise RuntimeError(
             "Unable to connect to Resend email API."
@@ -112,11 +117,18 @@ def send_email(
         except ValueError:
             error_data = response.text
 
+        logger.error(
+            "Resend email API failed: HTTP %s - %s",
+            response.status_code,
+            error_data,
+        )
+
         raise RuntimeError(
             "Resend email API failed: "
             f"HTTP {response.status_code} - "
             f"{error_data}"
         )
+
 
 
 # ============================================================
