@@ -256,15 +256,9 @@ RESEND_API_KEY = os.getenv(
 
 RESEND_FROM_EMAIL = os.getenv(
     "RESEND_FROM_EMAIL",
-    "security@FATLAICLINICALPLATFORM.com",
+    "onboarding@resend.dev",
 ).strip()
 
-if "fatlaiclinicalplatfom.com" in RESEND_FROM_EMAIL.lower():
-    RESEND_FROM_EMAIL = RESEND_FROM_EMAIL.replace(
-        "fatlaiclinicalplatfom.com", "FATLAICLINICALPLATFORM.com"
-    ).replace(
-        "FATLAICLINICALPLATFOM.com", "FATLAICLINICALPLATFORM.com"
-    )
 
 
 
