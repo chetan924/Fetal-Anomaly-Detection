@@ -82,6 +82,17 @@ model.eval()
 
 
 # =========================================================
+# RELEASE CHECKPOINT MEMORY
+# =========================================================
+
+# The model weights are already loaded into `model`.
+# Keeping the complete checkpoint dictionary in memory
+# is unnecessary after model initialization.
+
+del checkpoint
+
+
+# =========================================================
 # IMAGE TRANSFORM
 # =========================================================
 
@@ -180,6 +191,16 @@ def predict_plane(image):
     )
 
     # -----------------------------------------------------
+    # CLOSE IMAGE FILE
+    # -----------------------------------------------------
+
+    if isinstance(
+        image,
+        (str, Path)
+    ):
+        pil_image.close()
+
+    # -----------------------------------------------------
     # INFERENCE
     # -----------------------------------------------------
 
@@ -194,48 +215,75 @@ def predict_plane(image):
             dim=1,
         )[0]
 
-    # -----------------------------------------------------
-    # BEST PREDICTION
-    # -----------------------------------------------------
+        # -------------------------------------------------
+        # BEST PREDICTION
+        # -------------------------------------------------
 
-    confidence, predicted_index = (
-        torch.max(
-            probabilities,
-            dim=0,
+        confidence, predicted_index = (
+            torch.max(
+                probabilities,
+                dim=0,
+            )
         )
-    )
 
-    predicted_class = CLASS_NAMES[
-        predicted_index.item()
-    ]
+        predicted_class = CLASS_NAMES[
+            predicted_index.item()
+        ]
+
+        # -------------------------------------------------
+        # ALL CLASS PROBABILITIES
+        # -------------------------------------------------
+
+        results = []
+
+        for index, class_name in enumerate(
+            CLASS_NAMES
+        ):
+
+            results.append(
+                {
+                    "class": class_name,
+
+                    "confidence": float(
+                        probabilities[
+                            index
+                        ].item()
+                    ),
+                }
+            )
 
     # -----------------------------------------------------
-    # ALL CLASS PROBABILITIES
+    # SORT RESULTS
     # -----------------------------------------------------
-
-    results = []
-
-    for index, class_name in enumerate(
-        CLASS_NAMES
-    ):
-
-        results.append(
-            {
-                "class": class_name,
-
-                "confidence": float(
-                    probabilities[
-                        index
-                    ].item()
-                ),
-            }
-        )
 
     results.sort(
         key=lambda item:
         item["confidence"],
         reverse=True,
     )
+
+    # -----------------------------------------------------
+    # RESPONSE VALUES
+    # -----------------------------------------------------
+
+    confidence_value = float(
+        confidence.item()
+    )
+
+    confidence_percent = round(
+        confidence_value * 100,
+        2,
+    )
+
+    # -----------------------------------------------------
+    # MEMORY CLEANUP
+    # -----------------------------------------------------
+
+    del outputs
+    del probabilities
+    del image_tensor
+    del confidence
+    del predicted_index
 
     # -----------------------------------------------------
     # RESPONSE
@@ -246,17 +294,10 @@ def predict_plane(image):
             predicted_class,
 
         "confidence":
-            float(
-                confidence.item()
-            ),
+            confidence_value,
 
         "confidence_percent":
-            round(
-                float(
-                    confidence.item()
-                ) * 100,
-                2,
-            ),
+            confidence_percent,
 
         "probabilities":
             results,
