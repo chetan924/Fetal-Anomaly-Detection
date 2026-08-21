@@ -62,15 +62,13 @@ API_HOST = os.getenv(
 
 try:
     API_PORT = int(
-        os.getenv(
-            "API_PORT",
-            "8000",
-        )
+        os.getenv("PORT") or os.getenv("API_PORT") or "8000"
     )
 except ValueError as exc:
     raise RuntimeError(
-        "API_PORT must be a valid integer."
+        "API_PORT / PORT must be a valid integer."
     ) from exc
+
 
 
 if not 1 <= API_PORT <= 65535:
