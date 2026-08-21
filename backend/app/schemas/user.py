@@ -176,4 +176,14 @@ class ChangePasswordRequest(BaseModel):
         min_length=8,
         max_length=128,
     )
+
+
+# ============================================================
+# RESEND OTP
+# ============================================================
+
+class ResendOTPRequest(BaseModel):
+
+    email: EmailStr
+
     

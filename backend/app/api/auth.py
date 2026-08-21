@@ -20,6 +20,7 @@ from app.models.user import User
 from app.schemas.user import (
     ChangePasswordRequest,
     ForgotPasswordRequest,
+    ResendOTPRequest,
     ResetPasswordRequest,
     ResetPasswordWithOTPRequest,
     TokenResponse,
@@ -30,6 +31,7 @@ from app.schemas.user import (
     VerifyLoginOTPRequest,
     VerifySignupOTPRequest,
 )
+
 
 
 router = APIRouter(
@@ -68,6 +70,24 @@ def create_otp_record(
 
     now = datetime.now(timezone.utc)
 
+    # --------------------------------------------------------
+    # RATE-LIMIT COOLDOWN (60 seconds)
+    # --------------------------------------------------------
+
+    recent_otp = db.scalar(
+        select(OTP).where(
+            OTP.email == email,
+            OTP.purpose == purpose,
+            OTP.created_at >= now - timedelta(seconds=60),
+        ).order_by(OTP.created_at.desc())
+    )
+
+    if recent_otp:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="Too many OTP requests. Please wait before requesting another OTP.",
+        )
+
     old_otps = db.scalars(
         select(OTP).where(
             OTP.email == email,
@@ -97,6 +117,7 @@ def create_otp_record(
     db.flush()
 
     return raw_otp, otp
+
 
 
 def verify_otp(
@@ -250,7 +271,6 @@ def create_reset_token() -> tuple[
 
 @router.post(
     "/register",
-    response_model=UserResponse,
     status_code=status.HTTP_201_CREATED,
 )
 def register_user(
@@ -276,45 +296,78 @@ def register_user(
     )
 
     if existing_user:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail=(
-                "An account with this email "
-                "already exists."
+        if existing_user.is_active:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=(
+                    "An account with this email "
+                    "already exists."
+                ),
+            )
+        else:
+            user = existing_user
+            user.full_name = full_name
+            user.hashed_password = hash_password(payload.password)
+    else:
+        user = User(
+            full_name=full_name,
+            email=email,
+            hashed_password=hash_password(
+                payload.password
             ),
+            role="doctor",
+            is_active=False,
         )
-
-    user = User(
-        full_name=full_name,
-        email=email,
-        hashed_password=hash_password(
-            payload.password
-        ),
-        role="doctor",
-        is_active=True,
-    )
-
-    db.add(user)
+        db.add(user)
 
     try:
-        db.commit()
-        db.refresh(user)
+        db.flush()
 
-    except Exception:
+        raw_otp, _ = create_otp_record(
+            db,
+            email=email,
+            purpose="signup",
+            user_id=user.id,
+        )
+
+        send_generated_otp_email(
+            email=email,
+            otp=raw_otp,
+            purpose="signup",
+        )
+
+        db.commit()
+
+    except HTTPException:
         db.rollback()
         raise
 
-    return user
+    except Exception as exc:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Unable to send verification email. Please try again later.",
+        ) from exc
+
+    return {
+        "message": "Account created. A 6-digit verification code has been sent to your email.",
+        "email": email,
+        "otp_required": True,
+        "expires_in_seconds": OTP_EXPIRE_MINUTES * 60,
+    }
 
 
 @router.post(
     "/register/send-otp",
 )
+@router.post(
+    "/register/resend-otp",
+)
 def send_signup_otp(
-    email: str,
+    payload: ResendOTPRequest,
     db: Session = Depends(get_db),
 ):
-    email = normalize_email(email)
+    email = normalize_email(payload.email)
 
     user = db.scalar(
         select(User).where(
@@ -325,16 +378,13 @@ def send_signup_otp(
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=(
-                "No account was found for this email."
-            ),
+            detail="No account was found for this email.",
         )
 
-    if not user.is_active:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="User account is inactive.",
-        )
+    if user.is_active:
+        return {
+            "message": "Account is already active. You can now log in.",
+        }
 
     try:
         raw_otp, _ = create_otp_record(
@@ -356,25 +406,16 @@ def send_signup_otp(
         db.rollback()
         raise
 
-    except Exception:
+    except Exception as exc:
         db.rollback()
-
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail=(
-                "Unable to send verification email. "
-                "Please try again later."
-            ),
-        )
+            detail="Unable to send verification email. Please try again later.",
+        ) from exc
 
     return {
-        "message": (
-            "Signup verification OTP "
-            "has been sent to your email."
-        ),
-        "expires_in_seconds": (
-            OTP_EXPIRE_MINUTES * 60
-        ),
+        "message": "OTP sent to your email.",
+        "expires_in_seconds": OTP_EXPIRE_MINUTES * 60,
     }
 
 
@@ -401,11 +442,10 @@ def verify_signup_otp(
             detail="User not found.",
         )
 
-    if not user.is_active:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="User account is inactive.",
-        )
+    if user.is_active:
+        return {
+            "message": "Signup email verified successfully. You can now log in.",
+        }
 
     verify_otp(
         db,
@@ -414,10 +454,12 @@ def verify_signup_otp(
         purpose="signup",
     )
 
+    user.is_active = True
+    db.add(user)
+    db.commit()
+
     return {
-        "message": (
-            "Signup email verified successfully."
-        ),
+        "message": "Signup email verified successfully. You can now log in.",
     }
 
 
@@ -444,24 +486,14 @@ def login_user(
     ):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid email or password",
+            detail="Email/password is incorrect.",
         )
 
     if not user.is_active:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="User account is inactive",
+            detail="User account is inactive. Please verify your OTP.",
         )
-
-    if not LOGIN_OTP_ENABLED:
-        access_token = create_access_token(
-            str(user.id)
-        )
-
-        return {
-            "access_token": access_token,
-            "token_type": "bearer",
-        }
 
     try:
         raw_otp, _ = create_otp_record(
@@ -483,28 +515,128 @@ def login_user(
         db.rollback()
         raise
 
-    except Exception:
+    except Exception as exc:
         db.rollback()
-
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail=(
-                "Unable to send verification email. "
-                "Please try again later."
-            ),
+            detail="Unable to send verification email. Please try again later.",
+        ) from exc
+
+    return {
+        "message": "Credentials verified. A verification code has been sent to your email.",
+        "otp_required": True,
+        "expires_in_seconds": OTP_EXPIRE_MINUTES * 60,
+    }
+
+
+@router.post(
+    "/login/resend-otp",
+)
+def resend_login_otp(
+    payload: ResendOTPRequest,
+    db: Session = Depends(get_db),
+):
+    email = normalize_email(payload.email)
+
+    user = db.scalar(
+        select(User).where(
+            User.email == email
+        )
+    )
+
+    if not user or not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Email/password is incorrect.",
+        )
+
+    try:
+        raw_otp, _ = create_otp_record(
+            db,
+            email=email,
+            purpose="login",
+            user_id=user.id,
+        )
+
+        send_generated_otp_email(
+            email=email,
+            otp=raw_otp,
+            purpose="login",
+        )
+
+        db.commit()
+
+    except HTTPException:
+        db.rollback()
+        raise
+
+    except Exception as exc:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Unable to send verification email. Please try again later.",
+        ) from exc
+
+    return {
+        "message": "OTP sent to your email.",
+        "expires_in_seconds": OTP_EXPIRE_MINUTES * 60,
+    }
+
+
+@router.post(
+    "/forgot-password/resend-otp",
+)
+def resend_forgot_password_otp(
+    payload: ResendOTPRequest,
+    db: Session = Depends(get_db),
+):
+    email = normalize_email(payload.email)
+
+    user = db.scalar(
+        select(User).where(
+            User.email == email
+        )
+    )
+
+    generic_message = "If an account exists for this email, a password reset OTP has been sent."
+
+    if not user or not user.is_active:
+        return {
+            "message": generic_message,
+        }
+
+    try:
+        raw_otp, _ = create_otp_record(
+            db,
+            email=email,
+            purpose="forgot_password",
+            user_id=user.id,
+        )
+
+        send_generated_otp_email(
+            email=email,
+            otp=raw_otp,
+            purpose="password_reset",
+        )
+
+        db.commit()
+
+    except HTTPException:
+        db.rollback()
+        raise
+
+    except Exception:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Unable to send password reset email. Please try again later.",
         )
 
     return {
-        "message": (
-            "Credentials verified. "
-            "A verification code has been sent "
-            "to your email."
-        ),
-        "otp_required": True,
-        "expires_in_seconds": (
-            OTP_EXPIRE_MINUTES * 60
-        ),
+        "message": generic_message,
+        "expires_in_seconds": OTP_EXPIRE_MINUTES * 60,
     }
+
 
 
 @router.post(

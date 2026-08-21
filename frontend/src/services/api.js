@@ -250,6 +250,50 @@ export const register = async (
 
 
 // ============================================================
+// VERIFY SIGNUP OTP
+// ============================================================
+
+export const verifySignupOTP = async (
+  email,
+  otp
+) => {
+  const response =
+    await api.post(
+      '/api/auth/register/verify-otp',
+      {
+        email:
+          email.trim(),
+
+        otp:
+          String(otp).trim(),
+      }
+    );
+
+  return response.data;
+};
+
+
+// ============================================================
+// RESEND SIGNUP OTP
+// ============================================================
+
+export const resendSignupOTP = async (
+  email
+) => {
+  const response =
+    await api.post(
+      '/api/auth/register/resend-otp',
+      {
+        email:
+          email.trim(),
+      }
+    );
+
+  return response.data;
+};
+
+
+// ============================================================
 // LOGIN — STEP 1
 // ============================================================
 //
@@ -282,6 +326,26 @@ export const login = async (
           email.trim(),
 
         password,
+      }
+    );
+
+  return response.data;
+};
+
+
+// ============================================================
+// RESEND LOGIN OTP
+// ============================================================
+
+export const resendLoginOTP = async (
+  email
+) => {
+  const response =
+    await api.post(
+      '/api/auth/login/resend-otp',
+      {
+        email:
+          email.trim(),
       }
     );
 
@@ -328,6 +392,27 @@ export const verifyLoginOTP = async (
 
   return response.data;
 };
+
+
+// ============================================================
+// RESEND FORGOT PASSWORD OTP
+// ============================================================
+
+export const resendForgotPasswordOTP = async (
+  email
+) => {
+  const response =
+    await api.post(
+      '/api/auth/forgot-password/resend-otp',
+      {
+        email:
+          email.trim(),
+      }
+    );
+
+  return response.data;
+};
+
 
 
 // ============================================================

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -18,6 +18,7 @@ import {
   getApiErrorMessage,
   login,
   verifyLoginOTP,
+  resendLoginOTP,
 } from '../services/api';
 
 
@@ -37,11 +38,26 @@ function LoginPage() {
   const [step, setStep] = useState('credentials');
 
   const [loading, setLoading] = useState(false);
+  const [resendLoading, setResendLoading] = useState(false);
+  const [cooldown, setCooldown] = useState(0);
 
   const [error, setError] = useState('');
 
   const [successMessage, setSuccessMessage] =
     useState('');
+
+  // ============================================================
+  // COOLDOWN TIMER
+  // ============================================================
+
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    const timer = setInterval(() => {
+      setCooldown((prev) => prev - 1);
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [cooldown]);
+
 
 
   // ============================================================
@@ -158,6 +174,8 @@ function LoginPage() {
 
       setOtp('');
 
+      setCooldown(60);
+
       setSuccessMessage(
         result?.message ||
         'A verification code has been sent. Enter the OTP to continue.'
@@ -183,6 +201,38 @@ function LoginPage() {
       setLoading(false);
     }
   };
+
+
+  // ============================================================
+  // RESEND LOGIN OTP
+  // ============================================================
+
+  const handleResendOTP = async () => {
+    if (cooldown > 0 || resendLoading) return;
+
+    setError('');
+    setSuccessMessage('');
+    setResendLoading(true);
+
+    try {
+      const result = await resendLoginOTP(email.trim());
+      setCooldown(60);
+      setSuccessMessage(
+        result?.message || 'A new verification code has been sent to your email.'
+      );
+    } catch (err) {
+      console.error('Resend OTP error:', err);
+      setError(
+        getErrorMessage(
+          err,
+          'Failed to resend verification code. Please try again.'
+        )
+      );
+    } finally {
+      setResendLoading(false);
+    }
+  };
+
 
 
   // ============================================================
@@ -676,6 +726,32 @@ function LoginPage() {
               </Button>
 
 
+              {/* RESEND OTP */}
+
+              <div className="flex items-center justify-between text-xs pt-1">
+                <span className="text-slate-500">
+                  Didn't receive the code?
+                </span>
+
+                <button
+                  type="button"
+                  onClick={handleResendOTP}
+                  disabled={cooldown > 0 || resendLoading || loading}
+                  className="inline-flex items-center gap-1 font-semibold text-teal-600 hover:text-teal-700 disabled:cursor-not-allowed disabled:text-slate-400"
+                >
+                  <RefreshCw
+                    size={13}
+                    className={resendLoading ? 'animate-spin' : ''}
+                  />
+                  {cooldown > 0
+                    ? `Resend code (${cooldown}s)`
+                    : resendLoading
+                    ? 'Sending...'
+                    : 'Resend code'}
+                </button>
+              </div>
+
+
               {/* CHANGE EMAIL */}
 
               <button
@@ -692,6 +768,7 @@ function LoginPage() {
                 Use a different email
 
               </button>
+
 
             </form>
 
