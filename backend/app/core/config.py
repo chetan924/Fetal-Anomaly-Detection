@@ -235,47 +235,52 @@ if JWT_ALGORITHM not in SUPPORTED_JWT_ALGORITHMS:
 # RESEND EMAIL API
 # =========================================================
 #
-# Resend uses HTTPS.
+# =========================================================
+# SMTP EMAIL  (Gmail App Password — no custom domain)
+# =========================================================
 #
-# There is NO SMTP dependency here.
+# Uses Python stdlib smtplib over STARTTLS on port 587.
+# No new pip packages required.
 #
-# We intentionally do NOT use:
-# - SMTP_HOST
-# - SMTP_PORT
-# - SMTP_USERNAME
-# - SMTP_PASSWORD
-#
-# This avoids SMTP port 587 dependency on Render.
+# Render environment variables required:
+#   SMTP_HOST     (default: smtp.gmail.com)
+#   SMTP_PORT     (default: 587)
+#   SMTP_USERNAME (your Gmail address)
+#   SMTP_PASSWORD (Gmail App Password — NOT your login password)
+#   EMAIL_FROM_NAME (display name, optional)
 # =========================================================
 
-RESEND_API_KEY = os.getenv(
-    "RESEND_API_KEY",
+SMTP_HOST = os.getenv(
+    "SMTP_HOST",
+    "smtp.gmail.com",
+).strip()
+
+try:
+    SMTP_PORT = int(os.getenv("SMTP_PORT", "587"))
+except ValueError as exc:
+    raise RuntimeError("SMTP_PORT must be a valid integer.") from exc
+
+SMTP_USERNAME = os.getenv(
+    "SMTP_USERNAME",
     "",
 ).strip()
 
-
-RESEND_FROM_EMAIL = os.getenv(
-    "RESEND_FROM_EMAIL",
-    "onboarding@resend.dev",
+SMTP_PASSWORD = os.getenv(
+    "SMTP_PASSWORD",
+    "",
 ).strip()
 
-
-
-
-RESEND_FROM_NAME = os.getenv(
-    "RESEND_FROM_NAME",
+EMAIL_FROM_NAME = os.getenv(
+    "EMAIL_FROM_NAME",
     "FetalAI Clinical AI Platform",
 ).strip()
 
 
 # =========================================================
-# RESEND BASIC VALIDATION
+# SMTP BASIC VALIDATION
 # =========================================================
 
-if not RESEND_FROM_NAME:
-    raise RuntimeError(
-        "RESEND_FROM_NAME must not be empty."
-    )
+
 
 
 # =========================================================
@@ -338,19 +343,18 @@ if ENVIRONMENT == "production":
 
 
     # -----------------------------------------------------
-    # RESEND API
+    # SMTP CREDENTIALS
     # -----------------------------------------------------
 
-    if not RESEND_API_KEY:
+    if not SMTP_USERNAME:
         raise RuntimeError(
-            "RESEND_API_KEY must be set "
+            "SMTP_USERNAME must be set "
             "in production."
         )
 
-
-    if not RESEND_FROM_EMAIL:
+    if not SMTP_PASSWORD:
         raise RuntimeError(
-            "RESEND_FROM_EMAIL must be set "
+            "SMTP_PASSWORD must be set "
             "in production."
         )
 
@@ -362,7 +366,7 @@ if ENVIRONMENT == "production":
 # NEVER print:
 # - PostgreSQL password
 # - JWT secret
-# - Resend API key
+# - SMTP_PASSWORD
 #
 # =========================================================
 
@@ -458,20 +462,26 @@ print(
 
 
 print(
-    "Resend API key configured:",
-    bool(RESEND_API_KEY),
+    "SMTP host:",
+    SMTP_HOST,
 )
 
 
 print(
-    "Resend from email:",
-    RESEND_FROM_EMAIL,
+    "SMTP port:",
+    SMTP_PORT,
 )
 
 
 print(
-    "Resend from name:",
-    RESEND_FROM_NAME,
+    "SMTP username configured:",
+    bool(SMTP_USERNAME),
+)
+
+
+print(
+    "Email from name:",
+    EMAIL_FROM_NAME,
 )
 
 

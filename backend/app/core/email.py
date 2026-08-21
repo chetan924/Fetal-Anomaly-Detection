@@ -1,21 +1,23 @@
 import logging
-import requests
+import smtplib
+import ssl
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 
 logger = logging.getLogger(__name__)
 
 
 # ============================================================
-# RESEND CONFIGURATION
+# SMTP CONFIGURATION  (Gmail App Password)
 # ============================================================
 
 from app.core.config import (
-    RESEND_API_KEY,
-    RESEND_FROM_EMAIL,
-    RESEND_FROM_NAME,
+    SMTP_HOST,
+    SMTP_PORT,
+    SMTP_USERNAME,
+    SMTP_PASSWORD,
+    EMAIL_FROM_NAME,
 )
-
-
-RESEND_API_URL = "https://api.resend.com/emails"
 
 
 # ============================================================
@@ -28,28 +30,23 @@ def send_email(
     body: str,
 ) -> None:
     """
-    Send email using Resend HTTP API.
-
-    No SMTP connection is used.
+    Send email via Gmail SMTP (TLS, port 587).
+    Requires a Gmail account with an App Password.
+    No custom domain required.
     """
 
     # --------------------------------------------------------
     # Validate configuration
     # --------------------------------------------------------
 
-    if not RESEND_API_KEY:
+    if not SMTP_USERNAME:
         raise RuntimeError(
-            "RESEND_API_KEY is not configured."
+            "SMTP_USERNAME is not configured."
         )
 
-    if not RESEND_FROM_EMAIL:
+    if not SMTP_PASSWORD:
         raise RuntimeError(
-            "RESEND_FROM_EMAIL is not configured."
-        )
-
-    if not RESEND_FROM_NAME:
-        raise RuntimeError(
-            "RESEND_FROM_NAME is not configured."
+            "SMTP_PASSWORD is not configured."
         )
 
     if not to_email:
@@ -58,76 +55,69 @@ def send_email(
         )
 
     # --------------------------------------------------------
-    # Prepare request
+    # Build message
     # --------------------------------------------------------
 
-    from_email_str = RESEND_FROM_EMAIL.strip()
-
-    if "<" in from_email_str:
-        from_header = from_email_str
-    elif RESEND_FROM_NAME:
-        from_header = f"{RESEND_FROM_NAME} <{from_email_str}>"
-    else:
-        from_header = from_email_str
-
-    payload = {
-        "from": from_header,
-        "to": [
-            to_email.strip()
-        ],
-        "subject": subject,
-        "text": body,
-    }
-
-    headers = {
-        "Authorization": (
-            f"Bearer {RESEND_API_KEY}"
-        ),
-        "Content-Type": "application/json",
-    }
+    msg = MIMEMultipart("alternative")
+    msg["Subject"] = subject
+    msg["From"] = (
+        f"{EMAIL_FROM_NAME} <{SMTP_USERNAME}>"
+        if EMAIL_FROM_NAME
+        else SMTP_USERNAME
+    )
+    msg["To"] = to_email.strip()
+    msg.attach(MIMEText(body, "plain"))
 
     # --------------------------------------------------------
-    # Send through Resend HTTP API
+    # Send via SMTP
     # --------------------------------------------------------
 
     try:
+        context = ssl.create_default_context()
+        with smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=30) as server:
+            server.ehlo()
+            server.starttls(context=context)
+            server.ehlo()
+            server.login(SMTP_USERNAME, SMTP_PASSWORD)
+            server.sendmail(
+                SMTP_USERNAME,
+                to_email.strip(),
+                msg.as_string(),
+            )
 
-        response = requests.post(
-            RESEND_API_URL,
-            json=payload,
-            headers=headers,
-            timeout=30,
+    except smtplib.SMTPAuthenticationError as exc:
+        logger.error(
+            "SMTP authentication failed for sender '%s': %s",
+            SMTP_USERNAME,
+            exc,
         )
-
-    except requests.RequestException as exc:
-        logger.error("Unable to connect to Resend email API: %s", exc)
-
         raise RuntimeError(
-            "Unable to connect to Resend email API."
+            "Email authentication failed. "
+            "Check SMTP_USERNAME and SMTP_PASSWORD."
         ) from exc
 
-    # --------------------------------------------------------
-    # Handle Resend errors
-    # --------------------------------------------------------
-
-    if not response.ok:
-
-        try:
-            error_data = response.json()
-        except ValueError:
-            error_data = response.text
-
+    except smtplib.SMTPException as exc:
         logger.error(
-            "Resend email API failed: HTTP %s - %s",
-            response.status_code,
-            error_data,
+            "SMTP error while sending to '%s': %s",
+            to_email,
+            exc,
         )
-
         raise RuntimeError(
-            "Resend email API failed: "
-            f"HTTP {response.status_code} - "
-            f"{error_data}"
+            "Unable to send email via SMTP."
+        ) from exc
+
+    except OSError as exc:
+        logger.error(
+            "SMTP connection error to %s:%s — %s",
+            SMTP_HOST,
+            SMTP_PORT,
+            exc,
         )
+        raise RuntimeError(
+            "Unable to connect to SMTP server."
+        ) from exc
+
+
 
 
 
@@ -141,7 +131,8 @@ def send_otp_email(
     purpose: str = "verification",
 ) -> None:
     """
-    Send OTP email using Resend.
+    Send OTP email via Gmail SMTP.
+
     """
 
     normalized_purpose = (
