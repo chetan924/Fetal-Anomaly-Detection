@@ -1,4 +1,5 @@
 from pathlib import Path
+import gc
 import sys
 
 from PIL import Image
@@ -7,6 +8,7 @@ from app.ml.predict_plane import predict_plane
 from app.ml.predict_brain_plane import predict_brain_plane
 from app.ml.predict_brain_anomaly import predict_brain_anomaly
 from app.ml.gradcam import generate_gradcam
+
 
 
 # ============================================================

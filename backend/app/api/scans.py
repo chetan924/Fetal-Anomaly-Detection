@@ -1,4 +1,4 @@
-﻿from pathlib import Path
+from pathlib import Path
 from uuid import uuid4
 
 from fastapi import (
@@ -733,160 +733,40 @@ async def create_scan(
     # GRAD-CAM EXPLAINABILITY
     # =====================================================
 
-    explainability = None
+    gc_data = analysis_result.get("gradcam")
 
+    if isinstance(gc_data, dict) and gc_data.get("available"):
 
-    try:
+        heatmap_fn = gc_data.get("heatmap_filename", "")
+        overlay_fn = gc_data.get("overlay_filename", "")
 
-        gradcam_result = generate_gradcam(
-
-            image_path,
-
-            output_prefix=(
-                Path(
-                    saved_filename
-                ).stem
-                + "_gradcam"
-            ),
-        )
-
-
-        heatmap_path = Path(
-            gradcam_result[
-                "heatmap_path"
-            ]
-        )
-
-
-        overlay_path = Path(
-            gradcam_result[
-                "overlay_path"
-            ]
-        )
-
-
-        heatmap_path = (
-            heatmap_path
-            .resolve()
-        )
-
-
-        overlay_path = (
-            overlay_path
-            .resolve()
-        )
-
-
-        explainability_root = (
-            EXPLAINABILITY_DIR
-            .resolve()
-        )
-
-
-        try:
-
-            heatmap_relative_to_storage = (
-                heatmap_path
-                .relative_to(
-                    explainability_root
-                )
-            )
-
-
-            overlay_relative_to_storage = (
-                overlay_path
-                .relative_to(
-                    explainability_root
-                )
-            )
-
-        except ValueError as exc:
-
-            raise RuntimeError(
-                "Grad-CAM generated output "
-                "outside the explainability directory."
-            ) from exc
-
-
-        heatmap_relative = (
-            Path(
-                "storage"
-            )
-            / "explainability"
-            / heatmap_relative_to_storage
-        ).as_posix()
-
-
-        overlay_relative = (
-            Path(
-                "storage"
-            )
-            / "explainability"
-            / overlay_relative_to_storage
-        ).as_posix()
-
+        heatmap_rel = f"storage/explainability/{heatmap_fn}"
+        overlay_rel = f"storage/explainability/{overlay_fn}"
 
         explainability = {
-
-            "type":
-                "Grad-CAM",
-
-            "status":
-                "available",
-
-            "target_class":
-                gradcam_result[
-                    "target_class"
-                ],
-
-            "confidence":
-                gradcam_result[
-                    "confidence"
-                ],
-
-            "confidence_percent":
-                gradcam_result[
-                    "confidence_percent"
-                ],
-
-            "heatmap_path":
-                heatmap_relative,
-
-            "overlay_path":
-                overlay_relative,
-
-            "heatmap_url":
-                f"/{heatmap_relative}",
-
-            "overlay_url":
-                f"/{overlay_relative}",
+            "type": "Grad-CAM",
+            "status": "available",
+            "target_class": gc_data.get("target_class"),
+            "confidence": gc_data.get("confidence"),
+            "confidence_percent": gc_data.get("confidence_percent"),
+            "heatmap_path": heatmap_rel,
+            "overlay_path": overlay_rel,
+            "heatmap_url": gc_data.get("heatmap_url", f"/{heatmap_rel}"),
+            "overlay_url": gc_data.get("overlay_url", f"/{overlay_rel}"),
         }
 
+        analysis_result["explainability"] = explainability
 
-        analysis_result[
-            "explainability"
-        ] = explainability
-
-
-    except Exception:
+    else:
 
         explainability = {
-
-            "type":
-                "Grad-CAM",
-
-            "status":
-                "unavailable",
-
-            "message":
-                "Explainability output "
-                "could not be generated.",
+            "type": "Grad-CAM",
+            "status": "unavailable",
+            "message": "Explainability output could not be generated.",
         }
 
+        analysis_result["explainability"] = explainability
 
-        analysis_result[
-            "explainability"
-        ] = explainability
 
 
     # =====================================================

@@ -1,10 +1,12 @@
 from pathlib import Path
+import gc
 import sys
 
 import torch
 from PIL import Image
 from torch import nn
 from torchvision import models, transforms
+
 
 
 # =========================================================
@@ -90,6 +92,9 @@ model.eval()
 # is unnecessary after model initialization.
 
 del checkpoint
+
+gc.collect()
+
 
 
 # =========================================================

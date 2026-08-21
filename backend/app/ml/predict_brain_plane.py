@@ -1,10 +1,12 @@
 from pathlib import Path
+import gc
 import sys
 
 import torch
 from PIL import Image
 from torchvision import transforms
 from torchvision.models import efficientnet_b0
+
 
 
 # ============================================================
@@ -163,6 +165,16 @@ model = model.to(
 
 
 model.eval()
+
+
+# ============================================================
+# RELEASE CHECKPOINT MEMORY
+# ============================================================
+
+del checkpoint
+
+gc.collect()
+
 
 
 # ============================================================

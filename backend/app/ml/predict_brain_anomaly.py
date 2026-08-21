@@ -1,4 +1,5 @@
 from pathlib import Path
+import gc
 import pickle
 import sys
 
@@ -23,6 +24,7 @@ ARTIFACT_PATH = (
     / "brain_anomaly_detector.pkl"
 )
 
+
 VALID_PLANES = [
     "Trans-thalamic",
     "Trans-cerebellum",
@@ -40,43 +42,101 @@ DEVICE = torch.device(
 
 
 # ============================================================
-# LOAD ARTIFACT
+# ARTIFACT
 # ============================================================
 
-print("Loading brain outlier detector...")
+print("Loading brain outlier detector artifact...")
 
 if not ARTIFACT_PATH.exists():
     raise FileNotFoundError(
         f"Model artifact not found: {ARTIFACT_PATH}"
     )
 
-with open(ARTIFACT_PATH, "rb") as file:
+
+with open(
+    ARTIFACT_PATH,
+    "rb",
+) as file:
+
     artifact = pickle.load(file)
 
+
 pca = artifact["pca"]
+
 plane_models = artifact["plane_models"]
 
 
+# Release temporary artifact reference.
+
+del artifact
+
+gc.collect()
+
+
 # ============================================================
-# LOAD FEATURE EXTRACTOR
+# FEATURE MODEL
 # ============================================================
 
-weights = EfficientNet_B0_Weights.DEFAULT
+_feature_model = None
+_transform = None
 
-transform = weights.transforms()
 
-feature_model = efficientnet_b0(
-    weights=weights
-)
+def get_feature_model():
+    """
+    Lazily load EfficientNet-B0 feature extractor.
 
-feature_model.classifier = torch.nn.Identity()
+    The model is loaded only when brain anomaly
+    prediction actually requires it.
 
-feature_model = feature_model.to(DEVICE)
+    This reduces backend startup memory usage.
+    """
 
-feature_model.eval()
+    global _feature_model
+    global _transform
 
-for parameter in feature_model.parameters():
-    parameter.requires_grad = False
+    if _feature_model is not None:
+        return (
+            _feature_model,
+            _transform,
+        )
+
+    print(
+        "Loading EfficientNet-B0 brain feature extractor..."
+    )
+
+    weights = (
+        EfficientNet_B0_Weights.DEFAULT
+    )
+
+    _transform = weights.transforms()
+
+    model = efficientnet_b0(
+        weights=weights
+    )
+
+    # Remove classification head.
+    model.classifier = torch.nn.Identity()
+
+    model = model.to(
+        DEVICE
+    )
+
+    model.eval()
+
+    # Disable gradients completely.
+    for parameter in model.parameters():
+        parameter.requires_grad = False
+
+    _feature_model = model
+
+    print(
+        "Brain feature extractor loaded."
+    )
+
+    return (
+        _feature_model,
+        _transform,
+    )
 
 
 # ============================================================
@@ -88,6 +148,13 @@ def mahalanobis_score(
     mean,
     precision,
 ):
+    """
+    Calculate Mahalanobis distance.
+
+    This is a statistical outlier score,
+    not a medical diagnosis.
+    """
+
     diff = feature - mean
 
     squared_distance = np.einsum(
@@ -103,7 +170,9 @@ def mahalanobis_score(
     )
 
     return float(
-        np.sqrt(squared_distance)[0]
+        np.sqrt(
+            squared_distance
+        )[0]
     )
 
 
@@ -111,25 +180,55 @@ def mahalanobis_score(
 # FEATURE EXTRACTION
 # ============================================================
 
-def extract_feature(image: Image.Image):
+def extract_feature(
+    image: Image.Image,
+):
+    """
+    Extract EfficientNet-B0 feature vector
+    from a PIL image.
+    """
 
-    image = image.convert("RGB")
+    feature_model, transform = (
+        get_feature_model()
+    )
 
-    tensor = transform(image)
+    image = image.convert(
+        "RGB"
+    )
 
-    tensor = tensor.unsqueeze(0)
+    tensor = transform(
+        image
+    )
 
-    tensor = tensor.to(DEVICE)
+    tensor = tensor.unsqueeze(
+        0
+    )
+
+    tensor = tensor.to(
+        DEVICE
+    )
 
     with torch.inference_mode():
-        feature = feature_model(tensor)
 
+        feature = feature_model(
+            tensor
+        )
+
+    # Move result to CPU immediately.
     feature = (
         feature
         .detach()
         .cpu()
         .numpy()
     )
+
+    # Explicitly release inference tensor.
+    del tensor
+
+    if DEVICE.type == "cuda":
+        torch.cuda.empty_cache()
+
+    gc.collect()
 
     return feature
 
@@ -142,35 +241,76 @@ def predict_brain_anomaly(
     image,
     brain_plane,
 ):
+    """
+    Perform statistical brain-plane
+    outlier analysis.
+
+    Supported input:
+        1. image file path
+        2. pathlib.Path
+        3. PIL.Image.Image
+
+    Supported brain planes:
+        - Trans-thalamic
+        - Trans-cerebellum
+        - Trans-ventricular
+    """
+
+    # --------------------------------------------------------
+    # Validate brain plane
+    # --------------------------------------------------------
 
     if brain_plane not in VALID_PLANES:
+
         raise ValueError(
             "Unsupported brain plane. "
             f"Expected one of: {VALID_PLANES}"
         )
 
     # --------------------------------------------------------
-    # Accept PIL image or image path
+    # Accept image path
     # --------------------------------------------------------
 
-    if isinstance(image, (str, Path)):
+    if isinstance(
+        image,
+        (str, Path),
+    ):
 
-        image_path = Path(image)
+        image_path = Path(
+            image
+        )
 
         if not image_path.exists():
+
             raise FileNotFoundError(
                 f"Image not found: {image_path}"
             )
 
-        image = Image.open(
+        pil_image = Image.open(
             image_path
-        ).convert("RGB")
+        ).convert(
+            "RGB"
+        )
 
-    elif isinstance(image, Image.Image):
+    # --------------------------------------------------------
+    # Accept PIL image
+    # --------------------------------------------------------
 
-        image = image.convert("RGB")
+    elif isinstance(
+        image,
+        Image.Image,
+    ):
+
+        pil_image = image.convert(
+            "RGB"
+        )
+
+    # --------------------------------------------------------
+    # Invalid input
+    # --------------------------------------------------------
 
     else:
+
         raise TypeError(
             "image must be a PIL Image "
             "or a file path"
@@ -180,7 +320,9 @@ def predict_brain_anomaly(
     # EfficientNet features
     # --------------------------------------------------------
 
-    feature = extract_feature(image)
+    feature = extract_feature(
+        pil_image
+    )
 
     # --------------------------------------------------------
     # PCA
@@ -190,6 +332,9 @@ def predict_brain_anomaly(
         feature
     )
 
+    # Release original feature.
+    del feature
+
     # --------------------------------------------------------
     # Plane-specific reference
     # --------------------------------------------------------
@@ -198,16 +343,22 @@ def predict_brain_anomaly(
         brain_plane
     ]
 
-    mean = reference["mean"]
+    mean = reference[
+        "mean"
+    ]
 
-    precision = reference["precision"]
+    precision = reference[
+        "precision"
+    ]
 
     threshold = float(
-        reference["threshold"]
+        reference[
+            "threshold"
+        ]
     )
 
     # --------------------------------------------------------
-    # Score
+    # Mahalanobis score
     # --------------------------------------------------------
 
     score = mahalanobis_score(
@@ -216,7 +367,13 @@ def predict_brain_anomaly(
         precision,
     )
 
-    is_outlier = score > threshold
+    # --------------------------------------------------------
+    # Outlier decision
+    # --------------------------------------------------------
+
+    is_outlier = (
+        score > threshold
+    )
 
     status = (
         "Unusual / Outlier"
@@ -224,53 +381,88 @@ def predict_brain_anomaly(
         else "In-distribution"
     )
 
-    # Ratio is useful for UI,
-    # but it is NOT a medical probability.
+    # --------------------------------------------------------
+    # Threshold ratio
+    # --------------------------------------------------------
+
     threshold_ratio = (
         score / threshold
         if threshold > 0
         else 0.0
     )
 
+    # --------------------------------------------------------
+    # Interpretation
+    # --------------------------------------------------------
+
+    if is_outlier:
+
+        interpretation = (
+            "The image is a statistical "
+            "outlier relative to the "
+            "reference dataset."
+        )
+
+    else:
+
+        interpretation = (
+            "The image is within the "
+            "statistical distribution "
+            "of the reference dataset."
+        )
+
+    # --------------------------------------------------------
+    # Cleanup temporary arrays
+    # --------------------------------------------------------
+
+    del reduced_feature
+
+    gc.collect()
+
+    # --------------------------------------------------------
+    # Response
+    # --------------------------------------------------------
+
     return {
-        "brain_plane": brain_plane,
+        "brain_plane":
+            brain_plane,
 
-        "status": status,
+        "status":
+            status,
 
-        "is_outlier": bool(
-            is_outlier
-        ),
+        "is_outlier":
+            bool(
+                is_outlier
+            ),
 
-        "anomaly_score": round(
-            score,
-            4,
-        ),
+        "anomaly_score":
+            round(
+                score,
+                4,
+            ),
 
-        "threshold": round(
-            threshold,
-            4,
-        ),
+        "threshold":
+            round(
+                threshold,
+                4,
+            ),
 
-        "threshold_ratio": round(
-            threshold_ratio,
-            4,
-        ),
+        "threshold_ratio":
+            round(
+                threshold_ratio,
+                4,
+            ),
 
-        "interpretation": (
-            "The image is a statistical outlier "
-            "relative to the reference dataset."
-            if is_outlier
-            else
-            "The image is within the statistical "
-            "distribution of the reference dataset."
-        ),
+        "interpretation":
+            interpretation,
 
-        "medical_disclaimer": (
-            "This result is an experimental "
-            "statistical outlier score and is not "
-            "a clinically validated fetal anomaly "
-            "diagnosis."
-        ),
+        "medical_disclaimer":
+            (
+                "This result is an experimental "
+                "statistical outlier score and is "
+                "not a clinically validated fetal "
+                "anomaly diagnosis."
+            ),
     }
 
 
@@ -283,17 +475,27 @@ if __name__ == "__main__":
     if len(sys.argv) < 3:
 
         print()
-        print("Usage:")
+
+        print(
+            "Usage:"
+        )
+
         print(
             'python app\\ml\\predict_brain_anomaly.py '
             '"IMAGE_PATH" "BRAIN_PLANE"'
         )
 
         print()
-        print("Supported brain planes:")
+
+        print(
+            "Supported brain planes:"
+        )
 
         for plane in VALID_PLANES:
-            print(f"  - {plane}")
+
+            print(
+                f"  - {plane}"
+            )
 
         sys.exit(1)
 
@@ -301,8 +503,15 @@ if __name__ == "__main__":
 
     brain_plane = sys.argv[2]
 
-    print("Device:", DEVICE)
-    print("Brain plane:", brain_plane)
+    print(
+        "Device:",
+        DEVICE,
+    )
+
+    print(
+        "Brain plane:",
+        brain_plane,
+    )
 
     result = predict_brain_anomaly(
         image_path,
@@ -310,43 +519,68 @@ if __name__ == "__main__":
     )
 
     print()
-    print("=" * 60)
-    print("BRAIN OUTLIER ANALYSIS")
-    print("=" * 60)
+
+    print(
+        "=" * 60
+    )
+
+    print(
+        "BRAIN OUTLIER ANALYSIS"
+    )
+
+    print(
+        "=" * 60
+    )
 
     print(
         "Brain plane     :",
-        result["brain_plane"],
+        result[
+            "brain_plane"
+        ],
     )
 
     print(
         "Status          :",
-        result["status"],
+        result[
+            "status"
+        ],
     )
 
     print(
         "Anomaly score   :",
-        result["anomaly_score"],
+        result[
+            "anomaly_score"
+        ],
     )
 
     print(
         "Threshold       :",
-        result["threshold"],
+        result[
+            "threshold"
+        ],
     )
 
     print(
         "Threshold ratio :",
-        result["threshold_ratio"],
+        result[
+            "threshold_ratio"
+        ],
     )
 
     print()
+
     print(
         "Interpretation:",
-        result["interpretation"],
+        result[
+            "interpretation"
+        ],
     )
 
     print()
+
     print(
         "NOTE:",
-        result["medical_disclaimer"],
+        result[
+            "medical_disclaimer"
+        ],
     )

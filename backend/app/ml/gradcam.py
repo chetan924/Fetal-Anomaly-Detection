@@ -1,14 +1,19 @@
 from pathlib import Path
+import gc
 import sys
 
 import numpy as np
 import torch
 import torch.nn.functional as F
-
 from PIL import Image
+from torchvision import transforms
 
-from torch import nn
-from torchvision import models, transforms
+from app.ml.predict_plane import (
+    model,
+    CLASS_NAMES,
+    IMAGE_SIZE,
+    DEVICE,
+)
 
 
 # =========================================================
@@ -17,12 +22,6 @@ from torchvision import models, transforms
 
 BACKEND_ROOT = (
     Path(__file__).resolve().parents[2]
-)
-
-MODEL_PATH = (
-    Path(__file__).resolve().parent
-    / "models"
-    / "fetal_plane_efficientnet_b0.pth"
 )
 
 EXPLAINABILITY_DIR = (
@@ -35,84 +34,6 @@ EXPLAINABILITY_DIR.mkdir(
     parents=True,
     exist_ok=True,
 )
-
-DEVICE = torch.device(
-    "cuda"
-    if torch.cuda.is_available()
-    else "cpu"
-)
-
-
-# =========================================================
-# LOAD CHECKPOINT
-# =========================================================
-
-print(
-    "Loading fetal plane model for Grad-CAM..."
-)
-
-if not MODEL_PATH.exists():
-
-    raise FileNotFoundError(
-        f"Fetal plane model not found: "
-        f"{MODEL_PATH}"
-    )
-
-
-checkpoint = torch.load(
-    MODEL_PATH,
-    map_location=DEVICE,
-    weights_only=False,
-)
-
-
-CLASS_NAMES = checkpoint[
-    "class_names"
-]
-
-IMAGE_SIZE = checkpoint.get(
-    "image_size",
-    224,
-)
-
-
-print(
-    f"Grad-CAM device: {DEVICE}"
-)
-
-print(
-    f"Grad-CAM classes: {CLASS_NAMES}"
-)
-
-
-# =========================================================
-# MODEL
-# =========================================================
-
-model = models.efficientnet_b0(
-    weights=None
-)
-
-input_features = (
-    model.classifier[1].in_features
-)
-
-model.classifier[1] = nn.Linear(
-    input_features,
-    len(CLASS_NAMES),
-)
-
-model.load_state_dict(
-    checkpoint[
-        "model_state_dict"
-    ]
-)
-
-model = model.to(
-    DEVICE
-)
-
-model.eval()
 
 
 # =========================================================
@@ -193,22 +114,6 @@ def _backward_hook(
 
     _gradient = grad_output[0]
 
-
-# =========================================================
-# REGISTER HOOKS
-# =========================================================
-
-_forward_handle = (
-    TARGET_LAYER.register_forward_hook(
-        _forward_hook
-    )
-)
-
-_backward_handle = (
-    TARGET_LAYER.register_full_backward_hook(
-        _backward_hook
-    )
-)
 
 
 # =========================================================
@@ -611,309 +516,336 @@ def generate_gradcam(
     _activation = None
     _gradient = None
 
-    # -----------------------------------------------------
-    # Load image
-    # -----------------------------------------------------
+    forward_handle = TARGET_LAYER.register_forward_hook(_forward_hook)
+    backward_handle = TARGET_LAYER.register_full_backward_hook(_backward_hook)
 
-    pil_image = _load_image(
-        image
-    )
+    try:
 
-    # -----------------------------------------------------
-    # Transform
-    # -----------------------------------------------------
+        # -----------------------------------------------------
+        # Load image
+        # -----------------------------------------------------
 
-    image_tensor = transform(
-        pil_image
-    ).unsqueeze(
-        0
-    )
-
-    image_tensor = image_tensor.to(
-        DEVICE
-    )
-
-    # -----------------------------------------------------
-    # Reset gradients
-    # -----------------------------------------------------
-
-    model.zero_grad(
-        set_to_none=True
-    )
-
-    # -----------------------------------------------------
-    # Forward
-    # -----------------------------------------------------
-
-    outputs = model(
-        image_tensor
-    )
-
-    probabilities = torch.softmax(
-        outputs,
-        dim=1,
-    )
-
-    # -----------------------------------------------------
-    # Target class
-    # -----------------------------------------------------
-
-    if target_class_index is None:
-
-        target_class_index = int(
-            torch.argmax(
-                probabilities,
-                dim=1,
-            ).item()
+        pil_image = _load_image(
+            image
         )
 
-    target_score = outputs[
-        0,
-        target_class_index,
-    ]
+        # -----------------------------------------------------
+        # Transform
+        # -----------------------------------------------------
 
-    # -----------------------------------------------------
-    # Backward
-    # -----------------------------------------------------
-
-    target_score.backward()
-
-    # -----------------------------------------------------
-    # Validate hooks
-    # -----------------------------------------------------
-
-    if _activation is None:
-
-        raise RuntimeError(
-            "Grad-CAM activation "
-            "was not captured."
+        image_tensor = transform(
+            pil_image
+        ).unsqueeze(
+            0
         )
 
-    if _gradient is None:
-
-        raise RuntimeError(
-            "Grad-CAM gradient "
-            "was not captured."
+        image_tensor = image_tensor.to(
+            DEVICE
         )
 
-    # -----------------------------------------------------
-    # Activation
-    # -----------------------------------------------------
+        # -----------------------------------------------------
+        # Reset gradients
+        # -----------------------------------------------------
 
-    activation = _activation
-
-    # -----------------------------------------------------
-    # Gradient
-    # -----------------------------------------------------
-
-    gradient = _gradient
-
-    # -----------------------------------------------------
-    # Global average pooling
-    # -----------------------------------------------------
-
-    weights = gradient.mean(
-        dim=(2, 3),
-        keepdim=True,
-    )
-
-    # -----------------------------------------------------
-    # Weighted activation
-    # -----------------------------------------------------
-
-    cam = (
-        weights * activation
-    ).sum(
-        dim=1,
-        keepdim=True,
-    )
-
-    # -----------------------------------------------------
-    # ReLU
-    # -----------------------------------------------------
-
-    cam = F.relu(
-        cam
-    )
-
-    # -----------------------------------------------------
-    # Resize
-    # -----------------------------------------------------
-
-    cam = F.interpolate(
-        cam,
-        size=(
-            IMAGE_SIZE,
-            IMAGE_SIZE,
-        ),
-        mode="bilinear",
-        align_corners=False,
-    )
-
-    # -----------------------------------------------------
-    # Remove batch/channel
-    # -----------------------------------------------------
-
-    cam = cam[
-        0,
-        0,
-    ]
-
-    # -----------------------------------------------------
-    # Normalize
-    # -----------------------------------------------------
-
-    cam = _normalize_heatmap(
-        cam
-    )
-
-    # -----------------------------------------------------
-    # Convert to numpy
-    # -----------------------------------------------------
-
-    heatmap = (
-        cam
-        .detach()
-        .cpu()
-        .numpy()
-    )
-
-    # =====================================================
-    # ATTENTION CONCENTRATION
-    # =====================================================
-
-    attention_concentration = (
-        _calculate_attention_concentration(
-            heatmap
+        model.zero_grad(
+            set_to_none=True
         )
-    )
 
-    # =====================================================
-    # OUTPUT PREFIX
-    # =====================================================
+        # -----------------------------------------------------
+        # Forward
+        # -----------------------------------------------------
 
-    if output_prefix:
+        outputs = model(
+            image_tensor
+        )
 
-        safe_prefix = (
-            str(output_prefix)
-            .strip()
-            .replace(
-                " ",
-                "_",
+        probabilities = torch.softmax(
+            outputs,
+            dim=1,
+        )
+
+        # -----------------------------------------------------
+        # Target class
+        # -----------------------------------------------------
+
+        if target_class_index is None:
+
+            target_class_index = int(
+                torch.argmax(
+                    probabilities,
+                    dim=1,
+                ).item()
             )
-        )
 
-    else:
-
-        safe_prefix = (
-            "gradcam"
-        )
-
-    # =====================================================
-    # OUTPUT PATHS
-    # =====================================================
-
-    heatmap_filename = (
-        f"{safe_prefix}_heatmap.png"
-    )
-
-    overlay_filename = (
-        f"{safe_prefix}_overlay.png"
-    )
-
-    heatmap_path = (
-        EXPLAINABILITY_DIR
-        / heatmap_filename
-    )
-
-    overlay_path = (
-        EXPLAINABILITY_DIR
-        / overlay_filename
-    )
-
-    # =====================================================
-    # SAVE HEATMAP
-    # =====================================================
-
-    heatmap_image = (
-        _heatmap_to_image(
-            heatmap
-        )
-    )
-
-    heatmap_image.save(
-        heatmap_path
-    )
-
-    # =====================================================
-    # SAVE OVERLAY
-    # =====================================================
-
-    overlay_image = (
-        _create_overlay(
-            pil_image,
-            heatmap,
-            alpha=0.45,
-        )
-    )
-
-    overlay_image.save(
-        overlay_path
-    )
-
-    # =====================================================
-    # CONFIDENCE
-    # =====================================================
-
-    confidence = float(
-        probabilities[
+        target_score = outputs[
             0,
             target_class_index,
         ]
-        .detach()
-        .cpu()
-        .item()
-    )
 
-    # =====================================================
-    # RESPONSE
-    # =====================================================
+        # -----------------------------------------------------
+        # Backward
+        # -----------------------------------------------------
 
-    return {
+        target_score.backward()
 
-        "target_class":
-            CLASS_NAMES[
-                target_class_index
-            ],
+        # -----------------------------------------------------
+        # Validate hooks
+        # -----------------------------------------------------
 
-        "target_class_index":
-            target_class_index,
+        if _activation is None:
 
-        "confidence":
-            confidence,
+            raise RuntimeError(
+                "Grad-CAM activation "
+                "was not captured."
+            )
 
-        "confidence_percent":
-            round(
-                confidence * 100,
-                2,
+        if _gradient is None:
+
+            raise RuntimeError(
+                "Grad-CAM gradient "
+                "was not captured."
+            )
+
+        # -----------------------------------------------------
+        # Activation
+        # -----------------------------------------------------
+
+        activation = _activation
+
+        # -----------------------------------------------------
+        # Gradient
+        # -----------------------------------------------------
+
+        gradient = _gradient
+
+        # -----------------------------------------------------
+        # Global average pooling
+        # -----------------------------------------------------
+
+        weights = gradient.mean(
+            dim=(2, 3),
+            keepdim=True,
+        )
+
+        # -----------------------------------------------------
+        # Weighted activation
+        # -----------------------------------------------------
+
+        cam = (
+            weights * activation
+        ).sum(
+            dim=1,
+            keepdim=True,
+        )
+
+        # -----------------------------------------------------
+        # ReLU
+        # -----------------------------------------------------
+
+        cam = F.relu(
+            cam
+        )
+
+        # -----------------------------------------------------
+        # Resize
+        # -----------------------------------------------------
+
+        cam = F.interpolate(
+            cam,
+            size=(
+                IMAGE_SIZE,
+                IMAGE_SIZE,
             ),
+            mode="bilinear",
+            align_corners=False,
+        )
 
-        "attention_concentration":
-            attention_concentration,
+        # -----------------------------------------------------
+        # Remove batch/channel
+        # -----------------------------------------------------
 
-        "heatmap":
-            heatmap,
+        cam = cam[
+            0,
+            0,
+        ]
 
-        "heatmap_path":
-            str(
-                heatmap_path
-            ),
+        # -----------------------------------------------------
+        # Normalize
+        # -----------------------------------------------------
 
-        "overlay_path":
-            str(
-                overlay_path
-            ),
-    }
+        cam = _normalize_heatmap(
+            cam
+        )
+
+        # -----------------------------------------------------
+        # Convert to numpy
+        # -----------------------------------------------------
+
+        heatmap = (
+            cam
+            .detach()
+            .cpu()
+            .numpy()
+        )
+
+        # =====================================================
+        # ATTENTION CONCENTRATION
+        # =====================================================
+
+        attention_concentration = (
+            _calculate_attention_concentration(
+                heatmap
+            )
+        )
+
+        # =====================================================
+        # OUTPUT PREFIX
+        # =====================================================
+
+        if output_prefix:
+
+            safe_prefix = (
+                str(output_prefix)
+                .strip()
+                .replace(
+                    " ",
+                    "_",
+                )
+            )
+
+        else:
+
+            safe_prefix = (
+                "gradcam"
+            )
+
+        # =====================================================
+        # OUTPUT PATHS
+        # =====================================================
+
+        heatmap_filename = (
+            f"{safe_prefix}_heatmap.png"
+        )
+
+        overlay_filename = (
+            f"{safe_prefix}_overlay.png"
+        )
+
+        heatmap_path = (
+            EXPLAINABILITY_DIR
+            / heatmap_filename
+        )
+
+        overlay_path = (
+            EXPLAINABILITY_DIR
+            / overlay_filename
+        )
+
+        # =====================================================
+        # SAVE HEATMAP
+        # =====================================================
+
+        heatmap_image = (
+            _heatmap_to_image(
+                heatmap
+            )
+        )
+
+        heatmap_image.save(
+            heatmap_path
+        )
+
+        # =====================================================
+        # SAVE OVERLAY
+        # =====================================================
+
+        overlay_image = (
+            _create_overlay(
+                pil_image,
+                heatmap,
+                alpha=0.45,
+            )
+        )
+
+        overlay_image.save(
+            overlay_path
+        )
+
+        # =====================================================
+        # CONFIDENCE
+        # =====================================================
+
+        confidence = float(
+            probabilities[
+                0,
+                target_class_index,
+            ]
+            .detach()
+            .cpu()
+            .item()
+        )
+
+        # =====================================================
+        # RESPONSE
+        # =====================================================
+
+        return {
+
+            "target_class":
+                CLASS_NAMES[
+                    target_class_index
+                ],
+
+            "target_class_index":
+                target_class_index,
+
+            "confidence":
+                confidence,
+
+            "confidence_percent":
+                round(
+                    confidence * 100,
+                    2,
+                ),
+
+            "attention_concentration":
+                attention_concentration,
+
+            "heatmap":
+                heatmap,
+
+            "heatmap_path":
+                str(
+                    heatmap_path
+                ),
+
+            "overlay_path":
+                str(
+                    overlay_path
+                ),
+        }
+
+    finally:
+
+        forward_handle.remove()
+        backward_handle.remove()
+
+        _activation = None
+        _gradient = None
+
+        if 'image_tensor' in locals():
+            del image_tensor
+        if 'outputs' in locals():
+            del outputs
+        if 'probabilities' in locals():
+            del probabilities
+        if 'pil_image' in locals():
+            try:
+                pil_image.close()
+            except Exception:
+                pass
+
+        gc.collect()
 
 
 # =========================================================
@@ -921,27 +853,8 @@ def generate_gradcam(
 # =========================================================
 
 def remove_hooks():
+    pass
 
-    global _forward_handle
-    global _backward_handle
-
-    if (
-        _forward_handle
-        is not None
-    ):
-
-        _forward_handle.remove()
-
-        _forward_handle = None
-
-    if (
-        _backward_handle
-        is not None
-    ):
-
-        _backward_handle.remove()
-
-        _backward_handle = None
 
 
 # =========================================================
