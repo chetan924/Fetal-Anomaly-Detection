@@ -232,41 +232,25 @@ if JWT_ALGORITHM not in SUPPORTED_JWT_ALGORITHMS:
 
 
 # =========================================================
-# RESEND EMAIL API
+# BREVO HTTPS EMAIL API
 # =========================================================
 #
-# =========================================================
-# SMTP EMAIL  (Gmail App Password — no custom domain)
-# =========================================================
-#
-# Uses Python stdlib smtplib over STARTTLS on port 587.
-# No new pip packages required.
+# Brevo uses HTTPS (POST https://api.brevo.com/v3/smtp/email).
+# No outbound SMTP port is needed.
 #
 # Render environment variables required:
-#   SMTP_HOST     (default: smtp.gmail.com)
-#   SMTP_PORT     (default: 587)
-#   SMTP_USERNAME (your Gmail address)
-#   SMTP_PASSWORD (Gmail App Password — NOT your login password)
-#   EMAIL_FROM_NAME (display name, optional)
+#   BREVO_API_KEY       (Brevo API Key from brevo.com)
+#   EMAIL_FROM_ADDRESS  (Sender email address registered in Brevo)
+#   EMAIL_FROM_NAME     (Sender display name)
 # =========================================================
 
-SMTP_HOST = os.getenv(
-    "SMTP_HOST",
-    "smtp.gmail.com",
-).strip()
-
-try:
-    SMTP_PORT = int(os.getenv("SMTP_PORT", "587"))
-except ValueError as exc:
-    raise RuntimeError("SMTP_PORT must be a valid integer.") from exc
-
-SMTP_USERNAME = os.getenv(
-    "SMTP_USERNAME",
+BREVO_API_KEY = os.getenv(
+    "BREVO_API_KEY",
     "",
 ).strip()
 
-SMTP_PASSWORD = os.getenv(
-    "SMTP_PASSWORD",
+EMAIL_FROM_ADDRESS = os.getenv(
+    "EMAIL_FROM_ADDRESS",
     "",
 ).strip()
 
@@ -277,8 +261,14 @@ EMAIL_FROM_NAME = os.getenv(
 
 
 # =========================================================
-# SMTP BASIC VALIDATION
+# BREVO BASIC VALIDATION
 # =========================================================
+
+if not EMAIL_FROM_NAME:
+    raise RuntimeError(
+        "EMAIL_FROM_NAME must not be empty."
+    )
+
 
 
 
@@ -343,18 +333,18 @@ if ENVIRONMENT == "production":
 
 
     # -----------------------------------------------------
-    # SMTP CREDENTIALS
+    # BREVO EMAIL API
     # -----------------------------------------------------
 
-    if not SMTP_USERNAME:
+    if not BREVO_API_KEY:
         raise RuntimeError(
-            "SMTP_USERNAME must be set "
+            "BREVO_API_KEY must be set "
             "in production."
         )
 
-    if not SMTP_PASSWORD:
+    if not EMAIL_FROM_ADDRESS:
         raise RuntimeError(
-            "SMTP_PASSWORD must be set "
+            "EMAIL_FROM_ADDRESS must be set "
             "in production."
         )
 
@@ -366,7 +356,7 @@ if ENVIRONMENT == "production":
 # NEVER print:
 # - PostgreSQL password
 # - JWT secret
-# - SMTP_PASSWORD
+# - BREVO_API_KEY
 #
 # =========================================================
 
@@ -462,20 +452,14 @@ print(
 
 
 print(
-    "SMTP host:",
-    SMTP_HOST,
+    "Brevo API key configured:",
+    bool(BREVO_API_KEY),
 )
 
 
 print(
-    "SMTP port:",
-    SMTP_PORT,
-)
-
-
-print(
-    "SMTP username configured:",
-    bool(SMTP_USERNAME),
+    "Email from address:",
+    EMAIL_FROM_ADDRESS,
 )
 
 
@@ -487,3 +471,4 @@ print(
 
 print("=" * 60)
 print()
+

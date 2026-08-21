@@ -1,23 +1,20 @@
 import logging
-import smtplib
-import ssl
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
+import requests
 
 logger = logging.getLogger(__name__)
 
 
 # ============================================================
-# SMTP CONFIGURATION  (Gmail App Password)
+# BREVO HTTPS API CONFIGURATION
 # ============================================================
 
 from app.core.config import (
-    SMTP_HOST,
-    SMTP_PORT,
-    SMTP_USERNAME,
-    SMTP_PASSWORD,
+    BREVO_API_KEY,
+    EMAIL_FROM_ADDRESS,
     EMAIL_FROM_NAME,
 )
+
+BREVO_API_URL = "https://api.brevo.com/v3/smtp/email"
 
 
 # ============================================================
@@ -30,23 +27,22 @@ def send_email(
     body: str,
 ) -> None:
     """
-    Send email via Gmail SMTP (TLS, port 587).
-    Requires a Gmail account with an App Password.
-    No custom domain required.
+    Send email using Brevo's HTTPS Email API (v3).
+    No outbound SMTP port or custom domain required.
     """
 
     # --------------------------------------------------------
     # Validate configuration
     # --------------------------------------------------------
 
-    if not SMTP_USERNAME:
+    if not BREVO_API_KEY:
         raise RuntimeError(
-            "SMTP_USERNAME is not configured."
+            "BREVO_API_KEY is not configured."
         )
 
-    if not SMTP_PASSWORD:
+    if not EMAIL_FROM_ADDRESS:
         raise RuntimeError(
-            "SMTP_PASSWORD is not configured."
+            "EMAIL_FROM_ADDRESS is not configured."
         )
 
     if not to_email:
@@ -55,70 +51,71 @@ def send_email(
         )
 
     # --------------------------------------------------------
-    # Build message
+    # Build payload
     # --------------------------------------------------------
 
-    msg = MIMEMultipart("alternative")
-    msg["Subject"] = subject
-    msg["From"] = (
-        f"{EMAIL_FROM_NAME} <{SMTP_USERNAME}>"
-        if EMAIL_FROM_NAME
-        else SMTP_USERNAME
+    html_body = body.replace("\n", "<br>")
+    html_content = (
+        "<!DOCTYPE html><html><body style='font-family: Arial, sans-serif; "
+        f"line-height: 1.6; color: #1e293b;'>{html_body}</body></html>"
     )
-    msg["To"] = to_email.strip()
-    msg.attach(MIMEText(body, "plain"))
+
+    payload = {
+        "sender": {
+            "name": EMAIL_FROM_NAME or "FetalAI Clinical AI Platform",
+            "email": EMAIL_FROM_ADDRESS.strip(),
+        },
+        "to": [
+            {
+                "email": to_email.strip(),
+            }
+        ],
+        "subject": subject,
+        "textContent": body,
+        "htmlContent": html_content,
+    }
+
+    headers = {
+        "api-key": BREVO_API_KEY,
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+    }
 
     # --------------------------------------------------------
-    # Send via SMTP
+    # Send via HTTPS API
     # --------------------------------------------------------
 
     try:
-        context = ssl.create_default_context()
-        with smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=30) as server:
-            server.ehlo()
-            server.starttls(context=context)
-            server.ehlo()
-            server.login(SMTP_USERNAME, SMTP_PASSWORD)
-            server.sendmail(
-                SMTP_USERNAME,
-                to_email.strip(),
-                msg.as_string(),
-            )
-
-    except smtplib.SMTPAuthenticationError as exc:
-        logger.error(
-            "SMTP authentication failed for sender '%s': %s",
-            SMTP_USERNAME,
-            exc,
+        response = requests.post(
+            BREVO_API_URL,
+            json=payload,
+            headers=headers,
+            timeout=30,
         )
+    except requests.RequestException as exc:
+        logger.error("Unable to connect to Brevo email API: %s", exc)
         raise RuntimeError(
-            "Email authentication failed. "
-            "Check SMTP_USERNAME and SMTP_PASSWORD."
+            "Unable to connect to Brevo email API."
         ) from exc
 
-    except smtplib.SMTPException as exc:
+    # --------------------------------------------------------
+    # Handle Brevo API response
+    # --------------------------------------------------------
+
+    if not response.ok:
+        try:
+            error_data = response.json()
+        except ValueError:
+            error_data = response.text
+
         logger.error(
-            "SMTP error while sending to '%s': %s",
-            to_email,
-            exc,
+            "Brevo email API failed: HTTP %s - %s",
+            response.status_code,
+            error_data,
         )
         raise RuntimeError(
-            "Unable to send email via SMTP."
-        ) from exc
-
-    except OSError as exc:
-        logger.error(
-            "SMTP connection error to %s:%s — %s",
-            SMTP_HOST,
-            SMTP_PORT,
-            exc,
+            f"Brevo email API failed: HTTP {response.status_code} - {error_data}"
         )
-        raise RuntimeError(
-            "Unable to connect to SMTP server."
-        ) from exc
-
-
-
 
 
 # ============================================================
@@ -131,9 +128,9 @@ def send_otp_email(
     purpose: str = "verification",
 ) -> None:
     """
-    Send OTP email via Gmail SMTP.
-
+    Send OTP email via Brevo HTTPS Email API.
     """
+
 
     normalized_purpose = (
         purpose or "verification"
