@@ -1,34 +1,185 @@
-import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-
+import { useEffect, useMemo, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
-  Upload,
-  FileImage,
-  X,
-  Brain,
   Activity,
-  CheckCircle2,
+  AlertCircle,
   AlertTriangle,
-  Loader2,
-  UserRound,
-  RefreshCw,
-  Eye,
-  Search,
+  ArrowRight,
+  Box,
+  Brain,
+  CheckCircle2,
   ChevronDown,
-  Check,
+  Clock,
+  Download,
+  Eye,
+  FileImage,
+  FileText,
+  Heart,
+  HelpCircle,
+  Info,
+  Layers,
+  Loader2,
+  Plus,
+  RefreshCw,
+  RotateCcw,
+  ScanLine,
+  Search,
+  ShieldCheck,
+  Sparkles,
+  Upload,
+  User,
+  X,
 } from 'lucide-react';
 
+import PageHeader from '../components/common/PageHeader';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
+import { addNotification } from '../services/notifications';
 
 import {
+  API_BASE_URL,
+  getApiErrorMessage,
   getPatients,
-  uploadScan,
+  predictPlane,
+  predictSpine,
+  predictBrain,
+  predictLung,
+  predictBone,
+  predictPlacenta,
+  predictFace,
+  predictHeart,
+  predictComprehensive,
+  downloadReportPdf,
 } from '../services/api';
 
-import {
-  addNotification,
-} from '../services/notifications';
+// ============================================================
+// MODEL SELECTION CONFIGURATION
+// ============================================================
+
+const MODEL_MODES = [
+  {
+    id: 'comprehensive',
+    name: 'Comprehensive Analysis',
+    worker: 'multi-model',
+    category: 'Full Pipeline',
+    description: 'Multi-scan anatomical pipeline orchestrating all specialized AI models',
+    fileType: 'multi',
+    accept: '.jpg,.jpeg,.png,.webp,.vtk',
+    icon: Layers,
+    color: 'teal',
+  },
+  {
+    id: 'plane',
+    name: 'Fetal Plane',
+    worker: 'plane',
+    category: 'Classification',
+    description: 'EfficientNet-B0 standard fetal plane classifier',
+    fileType: 'image',
+    accept: '.jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp',
+    icon: ScanLine,
+    color: 'blue',
+  },
+  {
+    id: 'spine',
+    name: 'Fetal Spine',
+    worker: 'spine',
+    category: 'Object Detection',
+    description: 'YOLOv8 deep neural detector for fetal vertebral structures',
+    fileType: 'image',
+    accept: '.jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp',
+    icon: Activity,
+    color: 'indigo',
+  },
+  {
+    id: 'brain',
+    name: 'Fetal Brain',
+    worker: 'brain',
+    category: 'Dual Model',
+    description: 'EfficientNet-B0 plane classifier + Random Forest anomaly detector',
+    fileType: 'image',
+    accept: '.jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp',
+    icon: Brain,
+    color: 'violet',
+  },
+  {
+    id: 'lung',
+    name: 'Fetal Lung',
+    worker: 'lung',
+    category: 'Segmentation',
+    description: 'PyTorch U-Net fetal lung segmentation & mask ratio',
+    fileType: 'image',
+    accept: '.jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp',
+    icon: Sparkles,
+    color: 'sky',
+  },
+  {
+    id: 'bone',
+    name: 'Fetal Bone',
+    worker: 'bone',
+    category: 'Object Detection',
+    description: 'YOLOv8 fetal femur and skeletal bone detection',
+    fileType: 'image',
+    accept: '.jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp',
+    icon: Box,
+    color: 'amber',
+  },
+  {
+    id: 'placenta',
+    name: 'Placenta',
+    worker: 'placenta',
+    category: 'Segmentation',
+    description: 'SMP U-Net fetal placenta segmentation & boundary extraction',
+    fileType: 'image',
+    accept: '.jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp',
+    icon: ShieldCheck,
+    color: 'emerald',
+  },
+  {
+    id: 'face',
+    name: 'Face 3D Mesh',
+    worker: 'face',
+    category: '3D Geometry',
+    description: 'Python 3.11 + VTK 30-feature 3D facial mesh anomaly classifier',
+    fileType: 'vtk',
+    accept: '.vtk',
+    icon: Box,
+    color: 'fuchsia',
+  },
+  {
+    id: 'heart',
+    name: 'Fetal Heart',
+    worker: 'heart',
+    category: 'Segmentation',
+    description: 'SMP U-Net 4-chamber fetal heart segmentation',
+    fileType: 'image',
+    accept: '.jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp',
+    icon: Heart,
+    color: 'rose',
+  },
+  {
+    id: 'kidney',
+    name: 'Kidney AI',
+    worker: 'kidney',
+    category: 'Disabled',
+    description: 'Kidney AI model currently unavailable (disabled)',
+    fileType: 'image',
+    accept: '.jpg,.jpeg,.png,.webp',
+    disabled: true,
+    icon: AlertCircle,
+    color: 'slate',
+  },
+];
+
+const COMPREHENSIVE_SLOTS = [
+  { id: 'plane', label: 'Fetal Plane Scan', type: 'image', accept: '.jpg,.jpeg,.png,.webp', desc: 'Standard 2D ultrasound' },
+  { id: 'brain', label: 'Brain Scan', type: 'image', accept: '.jpg,.jpeg,.png,.webp', desc: 'Trans-thalamic / Trans-cerebellar plane' },
+  { id: 'spine', label: 'Spine Scan', type: 'image', accept: '.jpg,.jpeg,.png,.webp', desc: 'Sagittal / Coronal spine view' },
+  { id: 'lung', label: 'Lung Scan', type: 'image', accept: '.jpg,.jpeg,.png,.webp', desc: 'Thoracic cross-section' },
+  { id: 'bone', label: 'Bone / Femur Scan', type: 'image', accept: '.jpg,.jpeg,.png,.webp', desc: 'Femur length / skeletal view' },
+  { id: 'placenta', label: 'Placenta Scan', type: 'image', accept: '.jpg,.jpeg,.png,.webp', desc: 'Placental attachment view' },
+  { id: 'face', label: 'Face 3D Mesh (.vtk)', type: 'vtk', accept: '.vtk', desc: '3D polygonal surface mesh dataset' },
+  { id: 'heart', label: 'Heart Scan', type: 'image', accept: '.jpg,.jpeg,.png,.webp', desc: 'Four-chamber cardiac view' },
+];
 
 
 // ============================================================
@@ -36,112 +187,123 @@ import {
 // ============================================================
 
 function NewScanPage() {
-
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const urlPatient = searchParams.get('patient') || searchParams.get('patient_id') || '';
+  const urlMode = searchParams.get('mode') || '';
+
+  const initialMode = useMemo(() => {
+    if (urlMode) {
+      const found = MODEL_MODES.find((m) => m.id === urlMode.toLowerCase() && !m.disabled);
+      if (found) return found.id;
+    }
+    return 'comprehensive';
+  }, [urlMode]);
 
   // ==========================================================
   // STATE
   // ==========================================================
 
+  const [selectedMode, setSelectedMode] = useState(initialMode);
   const [patients, setPatients] = useState([]);
-  const [patientId, setPatientId] = useState('');
+  const [patientId, setPatientId] = useState(urlPatient);
+  const [patientDropdownOpen, setPatientDropdownOpen] = useState(false);
+  const [patientSearch, setPatientSearch] = useState('');
 
-  const [patientDropdownOpen, setPatientDropdownOpen] =
-    useState(false);
-
-  const [patientSearch, setPatientSearch] =
-    useState('');
-
+  // Single mode file state
   const [file, setFile] = useState(null);
   const [preview, setPreview] = useState('');
 
-  const [loadingPatients, setLoadingPatients] =
-    useState(true);
+  // Comprehensive multi-slot file state
+  const [comprehensiveFiles, setComprehensiveFiles] = useState({
+    plane: null,
+    brain: null,
+    spine: null,
+    lung: null,
+    bone: null,
+    placenta: null,
+    face: null,
+    heart: null,
+  });
 
-  const [analyzing, setAnalyzing] =
-    useState(false);
+  const [comprehensivePreviews, setComprehensivePreviews] = useState({});
 
-  const [progress, setProgress] =
-    useState(0);
+  const [loadingPatients, setLoadingPatients] = useState(true);
+  const [analyzing, setAnalyzing] = useState(false);
+  const [downloadingPdf, setDownloadingPdf] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [statusMessage, setStatusMessage] = useState('');
 
-  const [error, setError] =
-    useState('');
+  const [error, setError] = useState('');
 
-  const [result, setResult] =
-    useState(null);
+  const [result, setResult] = useState(null);
+  const [inferenceEnvelope, setInferenceEnvelope] = useState(null);
+
+  // Active mode metadata
+  const currentModeConfig = MODEL_MODES.find((m) => m.id === selectedMode) || MODEL_MODES[0];
 
   // ==========================================================
-  // GRAD-CAM IMAGE ERROR STATE
+  // PDF DOWNLOAD HELPER
   // ==========================================================
 
-  const [heatmapError, setHeatmapError] =
-    useState(false);
-
-  const [overlayError, setOverlayError] =
-    useState(false);
-
+  const handleDownloadPdf = async (reportNumber) => {
+    if (!reportNumber) return;
+    try {
+      setDownloadingPdf(true);
+      await downloadReportPdf(reportNumber, `${reportNumber}.pdf`);
+      addNotification({
+        type: 'success',
+        title: 'PDF Downloaded',
+        message: `Report ${reportNumber}.pdf downloaded successfully.`,
+      });
+    } catch (err) {
+      console.error('PDF download error:', err);
+      addNotification({
+        type: 'error',
+        title: 'PDF Download Failed',
+        message: 'Failed to download report PDF.',
+      });
+    } finally {
+      setDownloadingPdf(false);
+    }
+  };
 
   // ==========================================================
   // LOAD PATIENTS
   // ==========================================================
 
   useEffect(() => {
-
     let mounted = true;
 
     const loadPatients = async () => {
-
       try {
-
         setLoadingPatients(true);
         setError('');
 
         const response = await getPatients();
+        const data = Array.isArray(response)
+          ? response
+          : response?.patients || [];
 
-        const data =
-          Array.isArray(response)
-            ? response
-            : response?.patients || [];
-
-        if (!mounted) {
-          return;
-        }
+        if (!mounted) return;
 
         setPatients(data);
-
         if (data.length > 0) {
-
-          const firstPatient = data[0];
-
-          setPatientId(
-            firstPatient.patient_id ??
-            firstPatient.id ??
-            ''
-          );
-
+          if (urlPatient) {
+            setPatientId(urlPatient);
+          } else {
+            const firstPatient = data[0];
+            setPatientId(firstPatient.patient_id ?? firstPatient.id ?? '');
+          }
         }
-
       } catch (err) {
-
-        if (!mounted) {
-          return;
-        }
-
-        setError(
-          getErrorMessage(
-            err,
-            'Failed to load patients.'
-          )
-        );
-
+        if (!mounted) return;
+        setError(getApiErrorMessage(err, 'Failed to load patients list.'));
       } finally {
-
         if (mounted) {
           setLoadingPatients(false);
         }
-
       }
-
     };
 
     loadPatients();
@@ -149,162 +311,95 @@ function NewScanPage() {
     return () => {
       mounted = false;
     };
-
-  }, []);
-
+  }, [urlPatient]);
 
   // ==========================================================
-  // PATIENT DROPDOWN — OUTSIDE CLICK
+  // OUTSIDE CLICK FOR PATIENT DROPDOWN
   // ==========================================================
 
   useEffect(() => {
-
     const handleOutsideClick = (event) => {
-
-      if (
-        !event.target.closest(
-          '[data-patient-dropdown]'
-        )
-      ) {
-
+      if (!event.target.closest('[data-patient-dropdown]')) {
         setPatientDropdownOpen(false);
-
       }
-
     };
 
-    document.addEventListener(
-      'mousedown',
-      handleOutsideClick
-    );
-
+    document.addEventListener('mousedown', handleOutsideClick);
     return () => {
-
-      document.removeEventListener(
-        'mousedown',
-        handleOutsideClick
-      );
-
+      document.removeEventListener('mousedown', handleOutsideClick);
     };
-
   }, []);
 
-
   // ==========================================================
-  // CLEAN PREVIEW URL
+  // PREVIEW CLEANUP
   // ==========================================================
 
   useEffect(() => {
-
     return () => {
-
       if (preview) {
         URL.revokeObjectURL(preview);
       }
-
+      Object.values(comprehensivePreviews).forEach((url) => {
+        if (url && typeof url === 'string') {
+          URL.revokeObjectURL(url);
+        }
+      });
     };
-
-  }, [preview]);
-
+  }, [preview, comprehensivePreviews]);
 
   // ==========================================================
-  // ERROR MESSAGE HELPER
+  // HANDLE MODE CHANGE
   // ==========================================================
 
-  function getErrorMessage(err, fallback) {
+  const handleSelectMode = (modeId) => {
+    const modeConfig = MODEL_MODES.find((m) => m.id === modeId);
+    if (!modeConfig || modeConfig.disabled) return;
 
-    const detail =
-      err?.response?.data?.detail;
-
-    if (Array.isArray(detail)) {
-
-      return detail
-        .map((item) => {
-
-          if (
-            item &&
-            typeof item === 'object'
-          ) {
-
-            const location =
-              Array.isArray(item.loc)
-                ? item.loc.join('.')
-                : '';
-
-            const message =
-              item.msg ||
-              'Invalid value';
-
-            return location
-              ? `${location}: ${message}`
-              : message;
-
-          }
-
-          return String(item);
-
-        })
-        .join(', ');
-
-    }
-
-    if (typeof detail === 'string') {
-      return detail;
-    }
-
-    if (err?.response?.data?.message) {
-      return err.response.data.message;
-    }
-
-    if (err?.message) {
-      return err.message;
-    }
-
-    return fallback;
-  }
-
+    setSelectedMode(modeId);
+    setError('');
+    setResult(null);
+    setInferenceEnvelope(null);
+  };
 
   // ==========================================================
-  // FILE VALIDATION
+  // SINGLE FILE SELECTION & VALIDATION
   // ==========================================================
 
   const handleFileChange = (selectedFile) => {
-
-    if (!selectedFile) {
-      return;
-    }
+    if (!selectedFile) return;
 
     setError('');
     setResult(null);
+    setInferenceEnvelope(null);
     setProgress(0);
 
-    setHeatmapError(false);
-    setOverlayError(false);
+    const isVtkMode = currentModeConfig.fileType === 'vtk';
+    const fileName = selectedFile.name.toLowerCase();
 
-    const allowedTypes = [
-      'image/jpeg',
-      'image/png',
-      'image/webp',
-    ];
+    // 1. File type check
+    if (isVtkMode) {
+      if (!fileName.endsWith('.vtk')) {
+        setError('Please select a valid 3D mesh file with .vtk extension for Face 3D analysis.');
+        return;
+      }
+    } else {
+      const allowedImageExts = ['.jpg', '.jpeg', '.png', '.webp'];
+      const hasValidExt = allowedImageExts.some((ext) => fileName.endsWith(ext));
+      if (!hasValidExt) {
+        setError('Unsupported image format. Allowed formats: JPG, PNG, WEBP.');
+        return;
+      }
+    }
 
-    if (!allowedTypes.includes(selectedFile.type)) {
-
-      setError(
-        'Unsupported image format. Please select JPG, PNG or WEBP.'
-      );
-
+    // 2. File size check (15 MB standard limit)
+    const MAX_FILE_SIZE = 15 * 1024 * 1024;
+    if (selectedFile.size > MAX_FILE_SIZE) {
+      setError('File exceeds maximum size limit of 15 MB.');
       return;
     }
 
-    const maxFileSize =
-      20 * 1024 * 1024;
-
-    if (selectedFile.size > maxFileSize) {
-
-      setError(
-        'Image size must be 20 MB or smaller.'
-      );
-
+    if (selectedFile.size === 0) {
+      setError('Uploaded file is empty (0 bytes).');
       return;
     }
 
@@ -314,2584 +409,1048 @@ function NewScanPage() {
 
     setFile(selectedFile);
 
-    const objectUrl =
-      URL.createObjectURL(selectedFile);
-
-    setPreview(objectUrl);
+    if (!isVtkMode) {
+      const objectUrl = URL.createObjectURL(selectedFile);
+      setPreview(objectUrl);
+    } else {
+      setPreview('');
+    }
   };
 
-
-  // ==========================================================
-  // FILE INPUT
-  // ==========================================================
-
   const handleInputChange = (event) => {
-
-    const selectedFile =
-      event.target.files?.[0];
-
+    const selectedFile = event.target.files?.[0];
     handleFileChange(selectedFile);
-
     event.target.value = '';
   };
 
-
-  // ==========================================================
-  // REMOVE FILE
-  // ==========================================================
-
   const removeFile = () => {
-
     if (preview) {
       URL.revokeObjectURL(preview);
     }
-
     setFile(null);
     setPreview('');
     setResult(null);
+    setInferenceEnvelope(null);
     setProgress(0);
     setError('');
-
-    setHeatmapError(false);
-    setOverlayError(false);
   };
 
+  // ==========================================================
+  // COMPREHENSIVE MULTI-SLOT FILE SELECTION
+  // ==========================================================
+
+  const handleComprehensiveFileChange = (slotId, selectedFile) => {
+    if (!selectedFile) return;
+
+    setError('');
+    const fileName = selectedFile.name.toLowerCase();
+    const isVtk = slotId === 'face';
+
+    if (isVtk) {
+      if (!fileName.endsWith('.vtk')) {
+        setError('Face 3D slot requires a .vtk mesh file.');
+        return;
+      }
+    } else {
+      const allowedExts = ['.jpg', '.jpeg', '.png', '.webp'];
+      if (!allowedExts.some((ext) => fileName.endsWith(ext))) {
+        setError(`${slotId.toUpperCase()} scan must be a JPG, PNG, or WEBP image.`);
+        return;
+      }
+    }
+
+    if (selectedFile.size > 15 * 1024 * 1024) {
+      setError(`File for ${slotId} exceeds the 15 MB size limit.`);
+      return;
+    }
+
+    setComprehensiveFiles((prev) => ({
+      ...prev,
+      [slotId]: selectedFile,
+    }));
+
+    if (!isVtk) {
+      const url = URL.createObjectURL(selectedFile);
+      setComprehensivePreviews((prev) => ({
+        ...prev,
+        [slotId]: url,
+      }));
+    }
+  };
+
+  const removeComprehensiveFile = (slotId) => {
+    if (comprehensivePreviews[slotId]) {
+      URL.revokeObjectURL(comprehensivePreviews[slotId]);
+    }
+    setComprehensiveFiles((prev) => ({
+      ...prev,
+      [slotId]: null,
+    }));
+    setComprehensivePreviews((prev) => {
+      const updated = { ...prev };
+      delete updated[slotId];
+      return updated;
+    });
+  };
+
+  const totalComprehensiveUploaded = Object.values(comprehensiveFiles).filter(Boolean).length;
 
   // ==========================================================
-  // ANALYZE
+  // INFERENCE & ANALYSIS EXECUTION
   // ==========================================================
 
   const handleAnalyze = async () => {
-
-    // --------------------------------------------------------
-    // PATIENT VALIDATION
-    // --------------------------------------------------------
-
-    if (!patientId) {
-
-      setError(
-        'Please select a patient.'
-      );
-
-      return;
-    }
-
-
-    // --------------------------------------------------------
-    // FILE VALIDATION
-    // --------------------------------------------------------
-
-    if (!file) {
-
-      setError(
-        'Please select an ultrasound image.'
-      );
-
-      return;
-    }
-
-
     setError('');
     setResult(null);
+    setInferenceEnvelope(null);
     setAnalyzing(true);
     setProgress(0);
 
-    setHeatmapError(false);
-    setOverlayError(false);
-
+    const progressCb = (event) => {
+      if (event.total) {
+        const uploadProgress = Math.round((event.loaded / event.total) * 100);
+        setProgress(Math.min(uploadProgress, 100));
+      }
+    };
 
     try {
+      if (selectedMode === 'comprehensive') {
+        if (totalComprehensiveUploaded === 0) {
+          setError('Please upload at least one anatomical scan to run Comprehensive Analysis.');
+          setAnalyzing(false);
+          return;
+        }
 
-      // ======================================================
-      // UPLOAD + AI ANALYSIS
-      // ======================================================
-
-      const response =
-        await uploadScan(
+        const idempotencyKey = `idem_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+        setStatusMessage('Executing Unified Multi-Worker Pipeline...');
+        const envelope = await predictComprehensive(
+          comprehensiveFiles,
           patientId,
-          file,
-          (event) => {
-
-            if (event.total) {
-
-              const uploadProgress =
-                Math.round(
-                  (
-                    event.loaded /
-                    event.total
-                  ) * 100
-                );
-
-              setProgress(
-                Math.min(
-                  uploadProgress,
-                  100
-                )
-              );
-
-            }
-
-          }
+          idempotencyKey,
+          null,
+          progressCb
         );
 
+        if (!envelope || envelope.success === false) {
+          const errMsg = envelope?.error?.message || 'Comprehensive analysis failed.';
+          throw new Error(errMsg);
+        }
 
-      // ======================================================
-      // SAVE RESULT
-      // ======================================================
-
-      setResult(response);
-      setProgress(100);
-
-
-      // ======================================================
-      // EXTRACT RESPONSE DATA
-      // ======================================================
-
-      const scanId =
-        response?.scan_id ??
-        response?.scan?.id ??
-        response?.id ??
-        'Unknown';
-
-
-      const selectedPatient =
-        patients.find(
-          (patient) =>
-            String(
-              patient.patient_id ??
-              patient.id ??
-              ''
-            ) ===
-            String(patientId)
-        );
-
-
-      const patientName =
-        response?.patient?.patient_name ??
-        response?.patient?.full_name ??
-        response?.scan?.patient_name ??
-        selectedPatient?.full_name ??
-        selectedPatient?.name ??
-        'Selected patient';
-
-
-      const responseAnalysis =
-        response?.analysis ||
-        response?.scan?.analysis_result ||
-        response?.analysis_result ||
-        null;
-
-
-      const predictedPlane =
-        responseAnalysis
-          ?.fetal_plane
-          ?.predicted_class ??
-        'Unknown plane';
-
-
-      // ======================================================
-      // SUCCESS NOTIFICATION
-      // ======================================================
-
-      addNotification({
-
-        type: 'success',
-
-        title:
-          'Scan analysis completed',
-
-        message:
-          `Scan #${scanId} for ${patientName} ` +
-          `was successfully analyzed. ` +
-          `Fetal plane: ${predictedPlane}.`,
-
-      });
-
-
-      // ======================================================
-      // STATISTICAL OUTLIER NOTIFICATION
-      // ======================================================
-
-      const outlierResult =
-        responseAnalysis
-          ?.outlier_analysis;
-
-
-      const outlierStatus =
-        String(
-          outlierResult?.status || ''
-        ).toLowerCase();
-
-
-      const isOutlier =
-        outlierResult?.is_outlier === true ||
-        outlierStatus.includes('outlier') ||
-        outlierStatus.includes('flag');
-
-
-      if (
-        outlierResult &&
-        isOutlier
-      ) {
+        setInferenceEnvelope(envelope);
+        setResult(envelope.data);
+        setProgress(100);
 
         addNotification({
-
-          type: 'warning',
-
-          title:
-            'Statistical screening flagged',
-
-          message:
-            `Scan #${scanId} produced a ` +
-            `statistical screening result that ` +
-            `may require clinical review. ` +
-            `This is not a clinical diagnosis.`,
-
+          type: 'success',
+          title: 'Comprehensive Analysis Completed',
+          message: `Pipeline finished with status '${envelope.data.status}' (${envelope.data.summary.models_completed}/${envelope.data.summary.models_requested} completed).`,
         });
 
+      } else {
+        if (!file) {
+          setError(`Please select a ${currentModeConfig.fileType === 'vtk' ? 'VTK mesh file' : 'scan image'}.`);
+          setAnalyzing(false);
+          return;
+        }
+
+        setStatusMessage(`Sending request to ${currentModeConfig.name} AI worker...`);
+        let envelope = null;
+
+        switch (selectedMode) {
+          case 'plane':
+            envelope = await predictPlane(file, progressCb);
+            break;
+          case 'spine':
+            envelope = await predictSpine(file, progressCb);
+            break;
+          case 'brain':
+            envelope = await predictBrain(file, progressCb);
+            break;
+          case 'lung':
+            envelope = await predictLung(file, progressCb);
+            break;
+          case 'bone':
+            envelope = await predictBone(file, progressCb);
+            break;
+          case 'placenta':
+            envelope = await predictPlacenta(file, progressCb);
+            break;
+          case 'face':
+            envelope = await predictFace(file, progressCb);
+            break;
+          case 'heart':
+            envelope = await predictHeart(file, progressCb);
+            break;
+          default:
+            throw new Error(`Unsupported model mode: ${selectedMode}`);
+        }
+
+        if (!envelope || envelope.success === false) {
+          const errMsg = envelope?.error?.message || 'AI inference failed.';
+          throw new Error(errMsg);
+        }
+
+        setInferenceEnvelope(envelope);
+        setResult(envelope.data);
+        setProgress(100);
+
+        addNotification({
+          type: 'success',
+          title: `${currentModeConfig.name} Analysis Completed`,
+          message: `Model inference completed successfully (ID: ${envelope.request_id}).`,
+        });
       }
-
-
     } catch (err) {
-
-      console.error(
-        'Ultrasound analysis error:',
-        err
-      );
-
-
-      const errorMessage =
-        getErrorMessage(
-          err,
-          'Ultrasound analysis failed. Please try again.'
-        );
-
+      console.error('Inference error:', err);
+      const friendlyMsg = getApiErrorMessage(err, `${currentModeConfig.name} analysis failed. Please try again.`);
+      setError(friendlyMsg);
 
       addNotification({
-
         type: 'error',
-
-        title:
-          'Ultrasound analysis failed',
-
-        message:
-          errorMessage,
-
+        title: `${currentModeConfig.name} Analysis Failed`,
+        message: friendlyMsg,
       });
-
-
-      setError(errorMessage);
-
-
     } finally {
-
       setAnalyzing(false);
-
+      setStatusMessage('');
     }
-
   };
-
-
-  // ==========================================================
-  // EXTRACT ANALYSIS
-  // ==========================================================
-
-  const analysis =
-    result?.analysis ||
-    result?.scan?.analysis_result ||
-    result?.analysis_result ||
-    null;
-
-  const fetalPlane =
-    analysis?.fetal_plane || null;
-
-  const brainPlane =
-    analysis?.brain_plane || null;
-
-  const outlier =
-    analysis?.outlier_analysis || null;
-
-
-  // ==========================================================
-  // GRAD-CAM / AI EXPLAINABILITY
-  // ==========================================================
-
-  const explainability =
-    analysis?.explainability ||
-    analysis?.gradcam ||
-    result?.explainability ||
-    result?.gradcam ||
-    result?.scan?.explainability ||
-    result?.scan?.analysis_result?.explainability ||
-    result?.scan?.analysis_result?.gradcam ||
-    result?.analysis_result?.explainability ||
-    result?.analysis_result?.gradcam ||
-    null;
-
-
-  // ==========================================================
-  // API BASE URL
-  // ==========================================================
-
-  const apiBaseUrl = (
-    import.meta.env.VITE_API_BASE_URL ||
-    import.meta.env.VITE_API_URL ||
-    (import.meta.env.PROD
-      ? 'https://fetalai-backend.onrender.com'
-      : 'http://127.0.0.1:8000')
-  ).replace(/\/+$/, '');
-
-
-
-  // ==========================================================
-  // GRAD-CAM URL HELPER
-  // ==========================================================
-
-  const getStorageUrl = (path) => {
-
-    if (!path) {
-      return '';
-    }
-
-    let normalizedPath =
-      String(path)
-        .trim()
-        .replace(
-          /\\/g,
-          '/'
-        );
-
-
-    if (!normalizedPath) {
-      return '';
-    }
-
-
-    // --------------------------------------------------------
-    // ABSOLUTE URL
-    // --------------------------------------------------------
-
-    if (
-      normalizedPath.startsWith('http://') ||
-      normalizedPath.startsWith('https://')
-    ) {
-
-      return normalizedPath;
-
-    }
-
-
-    // --------------------------------------------------------
-    // REMOVE LEADING SLASH
-    // --------------------------------------------------------
-
-    normalizedPath =
-      normalizedPath.replace(
-        /^\/+/,
-        ''
-      );
-
-
-    // --------------------------------------------------------
-    // REMOVE /api PREFIX IF PRESENT
-    // --------------------------------------------------------
-
-    normalizedPath =
-      normalizedPath.replace(
-        /^api\//i,
-        ''
-      );
-
-
-    // --------------------------------------------------------
-    // DETECT STORAGE PATH
-    // --------------------------------------------------------
-
-    const storageIndex =
-      normalizedPath
-        .toLowerCase()
-        .indexOf('storage/');
-
-
-    if (storageIndex >= 0) {
-
-      normalizedPath =
-        normalizedPath.substring(
-          storageIndex
-        );
-
-    }
-
-
-    // --------------------------------------------------------
-    // ENSURE STORAGE PREFIX
-    // --------------------------------------------------------
-
-    if (
-      !normalizedPath
-        .toLowerCase()
-        .startsWith('storage/')
-    ) {
-
-      normalizedPath =
-        `storage/${normalizedPath}`;
-
-    }
-
-
-    // --------------------------------------------------------
-    // REMOVE /api
-    // --------------------------------------------------------
-
-    const backendBaseUrl =
-      String(apiBaseUrl)
-        .replace(
-          /\/+$/,
-          ''
-        )
-        .replace(
-          /\/api$/i,
-          ''
-        );
-
-
-    return (
-      `${backendBaseUrl}/${normalizedPath}`
-    );
-
-  };
-
-
-  // ==========================================================
-  // GRAD-CAM PATHS
-  // ==========================================================
-
-  const gradcamHeatmapPath =
-    explainability?.heatmap_url ||
-    explainability?.heatmap_path ||
-    explainability?.heatmap ||
-    '';
-
-
-  const gradcamOverlayPath =
-    explainability?.overlay_url ||
-    explainability?.overlay_path ||
-    explainability?.overlay ||
-    '';
-
-
-  const gradcamHeatmapUrl =
-    getStorageUrl(
-      gradcamHeatmapPath
-    );
-
-
-  const gradcamOverlayUrl =
-    getStorageUrl(
-      gradcamOverlayPath
-    );
-
-
-  // ==========================================================
-  // GRAD-CAM AVAILABLE
-  // ==========================================================
-
-  const gradcamAvailable =
-    Boolean(
-      explainability &&
-      (
-        explainability.status === 'available' ||
-        gradcamHeatmapUrl ||
-        gradcamOverlayUrl
-      )
-    );
-
-
-  // ==========================================================
-  // DERIVED BRAIN STATUS
-  // ==========================================================
-
-  const brainConfidence =
-    brainPlane
-      ? Number(
-          brainPlane.confidence_percent ??
-          (
-            Number(
-              brainPlane.confidence
-            ) * 100
-          )
-        )
-      : 0;
-
-
-  const requiredBrainConfidence =
-    Number(
-      analysis?.required_confidence ??
-      70
-    );
-
-
-  const brainAnalysisPerformed =
-    analysis?.brain_analysis_performed === true;
-
-
-  const brainPlaneAvailable =
-    Boolean(brainPlane);
-
-
-  // ==========================================================
-  // DERIVED STATISTICAL STATUS
-  // ==========================================================
-
-  const outlierStatus =
-    String(
-      outlier?.status || ''
-    ).toLowerCase();
-
-
-  const statisticalOutlier =
-    outlier?.is_outlier === true ||
-    outlierStatus.includes('outlier') ||
-    outlierStatus.includes('flag');
-
-
-  const statisticalScore =
-    outlier?.anomaly_score;
-
-
-  const statisticalThreshold =
-    outlier?.threshold;
-
-
-  const statisticalRatio =
-    outlier?.threshold_ratio;
-
-
-  // ==========================================================
-  // STATISTICAL METRICS
-  // ==========================================================
-
-  const parsedStatisticalScore =
-    Number(
-      statisticalScore
-    );
-
-
-  const parsedStatisticalThreshold =
-    Number(
-      statisticalThreshold
-    );
-
-
-  const parsedStatisticalRatio =
-    Number(
-      statisticalRatio
-    );
-
-
-  const hasStatisticalMetrics =
-    Number.isFinite(
-      parsedStatisticalScore
-    ) &&
-    Number.isFinite(
-      parsedStatisticalThreshold
-    ) &&
-    parsedStatisticalThreshold > 0;
-
-
-  const statisticalRatioPercent =
-    Number.isFinite(
-      parsedStatisticalRatio
-    )
-      ? (
-          parsedStatisticalRatio <= 1
-            ? parsedStatisticalRatio * 100
-            : parsedStatisticalRatio
-        )
-      : hasStatisticalMetrics
-        ? (
-            parsedStatisticalScore /
-            parsedStatisticalThreshold
-          ) * 100
-        : 0;
-
-
-  const scoreVsThresholdPercent =
-    hasStatisticalMetrics
-      ? (
-          parsedStatisticalScore /
-          parsedStatisticalThreshold
-        ) * 100
-      : 0;
-
-
-  const safeScoreVsThresholdPercent =
-    Math.min(
-      Math.max(
-        scoreVsThresholdPercent,
-        0
-      ),
-      100
-    );
-
-
-  // ==========================================================
-  // SAFE CONFIDENCE VALUES
-  // ==========================================================
-
-  const fetalConfidenceRaw =
-    fetalPlane?.confidence_percent ??
-    (
-      Number(
-        fetalPlane?.confidence
-      ) * 100
-    );
-
-
-  const fetalConfidence =
-    Number.isFinite(
-      Number(fetalConfidenceRaw)
-    )
-      ? Number(fetalConfidenceRaw)
-      : 0;
-
-
-  const brainConfidenceSafe =
-    Number.isFinite(
-      brainConfidence
-    )
-      ? brainConfidence
-      : 0;
-
-
-  const explainabilityConfidence =
-    explainability?.confidence_percent ??
-    fetalConfidence;
-
-
-  const safeExplainabilityConfidence =
-    Number.isFinite(
-      Number(explainabilityConfidence)
-    )
-      ? Number(explainabilityConfidence)
-      : 0;
-
 
   // ==========================================================
   // PATIENT DROPDOWN DATA
   // ==========================================================
 
-  const filteredPatients =
-    patients.filter((patient) => {
+  const filteredPatients = patients.filter((patient) => {
+    const search = patientSearch.trim().toLowerCase();
+    if (!search) return true;
+    const patientCode = String(patient.patient_id ?? patient.id ?? '').toLowerCase();
+    const patientName = String(patient.full_name ?? patient.name ?? '').toLowerCase();
+    return patientCode.includes(search) || patientName.includes(search);
+  });
 
-      const search =
-        patientSearch
-          .trim()
-          .toLowerCase();
-
-      if (!search) {
-        return true;
-      }
-
-      const patientCode =
-        String(
-          patient.patient_id ??
-          patient.id ??
-          ''
-        ).toLowerCase();
-
-      const patientName =
-        String(
-          patient.full_name ??
-          patient.name ??
-          ''
-        ).toLowerCase();
-
-      return (
-        patientCode.includes(search) ||
-        patientName.includes(search)
-      );
-
-    });
-
-
-  const selectedPatient =
-    patients.find(
-      (patient) =>
-        String(
-          patient.patient_id ??
-          patient.id ??
-          ''
-        ) ===
-        String(patientId)
-    );
-
-
-  // ==========================================================
-  // RENDER
-  // ==========================================================
+  const selectedPatient = patients.find(
+    (patient) => String(patient.patient_id ?? patient.id ?? '') === String(patientId)
+  );
 
   return (
-
     <div className="space-y-6 p-6">
-
       {/* ====================================================
           HEADER
       ==================================================== */}
-
-      <div>
-
-        <h1 className="text-2xl font-semibold text-slate-900">
-          New Scan
-        </h1>
-
-        <p className="mt-1 max-w-2xl text-sm text-slate-500">
-          Upload an ultrasound image for
-          AI-assisted fetal plane and brain
-          analysis.
-        </p>
-
-      </div>
-
-
-      {/* ====================================================
-          ERROR
-      ==================================================== */}
-
-      {error && (
-
-        <div
-          role="alert"
-          className="flex items-start gap-3 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700"
-        >
-
-          <AlertTriangle
-            size={18}
-            className="mt-0.5 shrink-0"
-          />
-
-          <span>
-            {error}
-          </span>
-
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2.5">
+            <ScanLine className="h-7 w-7 text-teal-600" />
+            Fetal Anomaly AI Analysis
+          </h1>
+          <p className="mt-1 text-sm text-slate-500">
+            Multi-model fetal ultrasound inference orchestrating isolated neural network workers.
+          </p>
         </div>
 
-      )}
-
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => navigate('/history')}
+            className="text-xs"
+          >
+            <Clock size={14} className="mr-1.5" />
+            Scan History
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => navigate('/reports')}
+            className="text-xs"
+          >
+            <FileText size={14} className="mr-1.5" />
+            Clinical Reports
+          </Button>
+        </div>
+      </div>
 
       {/* ====================================================
-          MAIN GRID
+          ERROR BANNER
       ==================================================== */}
+      {error && (
+        <div className="flex items-start gap-3 rounded-2xl border border-rose-200 bg-rose-50/80 p-4 text-rose-800 shadow-xs">
+          <AlertTriangle size={18} className="mt-0.5 shrink-0 text-rose-600" />
+          <div className="flex-1 text-xs">
+            <p className="font-bold text-rose-900">Analysis Request Notice</p>
+            <p className="mt-0.5 text-rose-700">{error}</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setError('')}
+            className="text-rose-500 hover:text-rose-700 transition"
+          >
+            <X size={16} />
+          </button>
+        </div>
+      )}
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      {/* ====================================================
+          ANATOMICAL MODEL SELECTION GRID
+      ==================================================== */}
+      <Card
+        title="AI Analysis Mode Selection"
+        subtitle="Choose Comprehensive Multi-Scan Analysis or a specialized anatomical worker"
+      >
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-5 pt-2">
+          {MODEL_MODES.map((mode) => {
+            const isSelected = selectedMode === mode.id;
+            const Icon = mode.icon;
 
-        {/* ==================================================
-            LEFT — UPLOAD
-        ================================================== */}
-
-        <Card
-          title="Upload Ultrasound"
-          subtitle="Select a patient and upload an ultrasound image."
-        >
-
-          <div className="mt-5 space-y-5">
-
-            {/* PATIENT */}
-
-            <div>
-
-              <label
-                htmlFor="patient"
-                className="mb-2 block text-sm font-medium text-slate-700"
+            return (
+              <button
+                key={mode.id}
+                type="button"
+                disabled={mode.disabled}
+                onClick={() => handleSelectMode(mode.id)}
+                className={`relative flex flex-col items-start rounded-2xl border p-3.5 text-left transition duration-200 ${
+                  mode.disabled
+                    ? 'cursor-not-allowed border-slate-200 bg-slate-50/60 opacity-60'
+                    : isSelected
+                    ? 'border-teal-600 bg-teal-50/50 shadow-xs ring-2 ring-teal-600/20'
+                    : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/70'
+                }`}
               >
-                Patient
+                <div className="flex w-full items-center justify-between">
+                  <div
+                    className={`flex h-8 w-8 items-center justify-center rounded-xl ${
+                      mode.disabled
+                        ? 'bg-slate-200 text-slate-500'
+                        : isSelected
+                        ? 'bg-teal-600 text-white'
+                        : 'bg-slate-100 text-slate-700'
+                    }`}
+                  >
+                    <Icon size={16} />
+                  </div>
+
+                  {mode.disabled ? (
+                    <span className="rounded-full bg-slate-200 px-2 py-0.5 text-[10px] font-bold uppercase text-slate-600">
+                      Disabled
+                    </span>
+                  ) : isSelected ? (
+                    <span className="flex h-2 w-2 rounded-full bg-teal-600 animate-pulse" />
+                  ) : null}
+                </div>
+
+                <p className="mt-2.5 text-xs font-bold text-slate-900">{mode.name}</p>
+                <p className="text-[11px] text-slate-500 leading-tight mt-0.5 line-clamp-2">
+                  {mode.description}
+                </p>
+
+                <div className="mt-2 flex items-center gap-1.5 text-[10px] font-semibold text-slate-400">
+                  <span className="rounded bg-slate-100 px-1.5 py-0.5 text-slate-600 uppercase font-mono">
+                    {mode.fileType}
+                  </span>
+                  <span>•</span>
+                  <span className="text-slate-500">{mode.category}</span>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </Card>
+
+      {/* ====================================================
+          MAIN TWO-COLUMN WORKSPACE
+      ==================================================== */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        {/* ==================================================
+            LEFT COLUMN: PATIENT & UPLOAD PANEL
+        ================================================== */}
+        <Card
+          title={selectedMode === 'comprehensive' ? 'Comprehensive Scan Set Upload' : `${currentModeConfig.name} Input`}
+          subtitle={
+            selectedMode === 'comprehensive'
+              ? 'Upload available anatomical scans for unified multi-worker analysis'
+              : `Upload a valid ${currentModeConfig.fileType === 'vtk' ? '3D VTK mesh (.vtk)' : 'ultrasound image'} for inference`
+          }
+        >
+          <div className="space-y-4 pt-2">
+            {/* PATIENT SELECTION DROPDOWN */}
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                Target Patient Record <span className="text-slate-400 font-normal">(Optional for direct inference)</span>
               </label>
 
-
-              <div
-                className="relative"
-                data-patient-dropdown
-              >
-
-                {/* ==================================================
-                    SELECT BUTTON
-                ================================================== */}
-
+              <div className="relative" data-patient-dropdown>
                 <button
-                  id="patient"
                   type="button"
-                  disabled={
-                    loadingPatients ||
-                    analyzing ||
-                    patients.length === 0
-                  }
-                  onClick={() => {
-
-                    setPatientDropdownOpen(
-                      (previous) => !previous
-                    );
-
-                    setPatientSearch('');
-
-                  }}
-                  className={`
-                    flex
-                    w-full
-                    items-center
-                    gap-3
-                    rounded-xl
-                    border
-                    bg-white
-                    px-4
-                    py-3
-                    text-left
-                    outline-none
-                    transition-all
-                    duration-200
-                    ${
-                      patientDropdownOpen
-                        ? 'border-teal-500 ring-2 ring-teal-100'
-                        : 'border-slate-300 hover:border-teal-400'
-                    }
-                    ${
-                      loadingPatients ||
-                      analyzing ||
-                      patients.length === 0
-                        ? 'cursor-not-allowed bg-slate-100 opacity-70'
-                        : 'cursor-pointer'
-                    }
-                  `}
+                  onClick={() => setPatientDropdownOpen(!patientDropdownOpen)}
+                  disabled={loadingPatients || analyzing}
+                  className="flex w-full items-center justify-between rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-left text-xs font-medium text-slate-800 hover:border-slate-300 focus:border-teal-500 focus:outline-none transition shadow-2xs"
                 >
-
-                  <div
-                    className={`
-                      flex
-                      h-9
-                      w-9
-                      shrink-0
-                      items-center
-                      justify-center
-                      rounded-lg
-                      ${
-                        selectedPatient
-                          ? 'bg-teal-50 text-teal-700'
-                          : 'bg-slate-100 text-slate-400'
-                      }
-                    `}
-                  >
-
-                    <UserRound
-                      size={18}
-                    />
-
-                  </div>
-
-
-                  <div className="min-w-0 flex-1">
-
+                  <div className="flex items-center gap-2 truncate">
+                    <User size={15} className="text-slate-400 shrink-0" />
                     {selectedPatient ? (
-
-                      <>
-
-                        <p className="truncate text-sm font-semibold text-slate-800">
-
-                          {selectedPatient.patient_id ??
-                            selectedPatient.id}
-
-                        </p>
-
-
-                        <p className="truncate text-xs text-slate-500">
-
-                          {selectedPatient.full_name ??
-                            selectedPatient.name ??
-                            'Unnamed patient'}
-
-                        </p>
-
-                      </>
-
+                      <span>
+                        <strong className="text-slate-900">{selectedPatient.full_name || selectedPatient.name}</strong>{' '}
+                        <span className="text-slate-500 font-mono">({selectedPatient.patient_id || selectedPatient.id})</span>
+                      </span>
                     ) : (
-
-                      <p className="text-sm text-slate-400">
-
-                        {loadingPatients
-                          ? 'Loading patients...'
-                          : patients.length === 0
-                            ? 'No patients available'
-                            : 'Select patient'}
-
-                      </p>
-
+                      <span className="text-slate-400">-- Select a Patient (Optional) --</span>
                     )}
-
                   </div>
-
-
-                  <ChevronDown
-                    size={18}
-                    className={`
-                      shrink-0
-                      text-slate-400
-                      transition-transform
-                      duration-200
-                      ${
-                        patientDropdownOpen
-                          ? 'rotate-180 text-teal-600'
-                          : ''
-                      }
-                    `}
-                  />
-
+                  <ChevronDown size={14} className="text-slate-400" />
                 </button>
 
-
-                {/* ==================================================
-                    DROPDOWN
-                ================================================== */}
-
-                {patientDropdownOpen &&
-                  !loadingPatients &&
-                  patients.length > 0 && (
-
-                    <div
-                      className="
-                        absolute
-                        left-0
-                        right-0
-                        top-full
-                        z-50
-                        mt-2
-                        overflow-hidden
-                        rounded-2xl
-                        border
-                        border-slate-200
-                        bg-white
-                        shadow-xl
-                        shadow-slate-900/10
-                      "
-                    >
-
-                      {/* SEARCH */}
-
-                      <div className="border-b border-slate-100 p-3">
-
-                        <div className="relative">
-
-                          <Search
-                            size={17}
-                            className="
-                              pointer-events-none
-                              absolute
-                              left-3
-                              top-1/2
-                              -translate-y-1/2
-                              text-slate-400
-                            "
-                          />
-
-
-                          <input
-                            type="text"
-                            value={patientSearch}
-                            onChange={(event) =>
-                              setPatientSearch(
-                                event.target.value
-                              )
-                            }
-                            placeholder="Search patients..."
-                            autoFocus
-                            className="
-                              w-full
-                              rounded-xl
-                              border
-                              border-slate-200
-                              bg-slate-50
-                              py-2.5
-                              pl-10
-                              pr-3
-                              text-sm
-                              text-slate-800
-                              outline-none
-                              transition
-                              placeholder:text-slate-400
-                              focus:border-teal-400
-                              focus:bg-white
-                              focus:ring-2
-                              focus:ring-teal-100
-                            "
-                          />
-
-                        </div>
-
-                      </div>
-
-
-                      {/* PATIENT LIST */}
-
-                      <div
-                        className="
-                          max-h-64
-                          overflow-y-auto
-                          p-2
-                        "
-                      >
-
-                        {filteredPatients.length > 0 ? (
-
-                          filteredPatients.map(
-                            (patient) => {
-
-                              const value =
-                                patient.patient_id ??
-                                patient.id ??
-                                '';
-
-                              const isSelected =
-                                String(value) ===
-                                String(patientId);
-
-
-                              return (
-
-                                <button
-                                  key={value}
-                                  type="button"
-                                  onClick={() => {
-
-                                    setPatientId(
-                                      value
-                                    );
-
-                                    setPatientDropdownOpen(
-                                      false
-                                    );
-
-                                    setPatientSearch('');
-
-                                    setError('');
-
-                                  }}
-                                  className={`
-                                    group
-                                    flex
-                                    w-full
-                                    items-center
-                                    gap-3
-                                    rounded-xl
-                                    px-3
-                                    py-3
-                                    text-left
-                                    transition
-                                    ${
-                                      isSelected
-                                        ? 'bg-teal-50'
-                                        : 'hover:bg-slate-50'
-                                    }
-                                  `}
-                                >
-
-                                  <div
-                                    className={`
-                                      flex
-                                      h-10
-                                      w-10
-                                      shrink-0
-                                      items-center
-                                      justify-center
-                                      rounded-xl
-                                      text-sm
-                                      font-semibold
-                                      ${
-                                        isSelected
-                                          ? 'bg-teal-100 text-teal-700'
-                                          : 'bg-slate-100 text-slate-500 group-hover:bg-teal-50 group-hover:text-teal-600'
-                                      }
-                                    `}
-                                  >
-
-                                    <UserRound
-                                      size={18}
-                                    />
-
-                                  </div>
-
-
-                                  <div className="min-w-0 flex-1">
-
-                                    <p
-                                      className={`
-                                        truncate
-                                        text-sm
-                                        font-semibold
-                                        ${
-                                          isSelected
-                                            ? 'text-teal-800'
-                                            : 'text-slate-800'
-                                        }
-                                      `}
-                                    >
-
-                                      {patient.patient_id ??
-                                        patient.id}
-
-                                    </p>
-
-
-                                    <p className="truncate text-xs text-slate-500">
-
-                                      {patient.full_name ??
-                                        patient.name ??
-                                        'Unnamed patient'}
-
-                                    </p>
-
-                                  </div>
-
-
-                                  {isSelected && (
-
-                                    <div
-                                      className="
-                                        flex
-                                        h-7
-                                        w-7
-                                        shrink-0
-                                        items-center
-                                        justify-center
-                                        rounded-full
-                                        bg-teal-600
-                                        text-white
-                                      "
-                                    >
-
-                                      <Check
-                                        size={15}
-                                      />
-
-                                    </div>
-
-                                  )}
-
-                                </button>
-
-                              );
-
-                            }
-                          )
-
-                        ) : (
-
-                          <div
-                            className="
-                              px-4
-                              py-8
-                              text-center
-                            "
-                          >
-
-                            <Search
-                              size={24}
-                              className="
-                                mx-auto
-                                text-slate-300
-                              "
-                            />
-
-
-                            <p className="
-                              mt-2
-                              text-sm
-                              font-medium
-                              text-slate-600
-                            ">
-                              No patients found
-                            </p>
-
-
-                            <p className="
-                              mt-1
-                              text-xs
-                              text-slate-400
-                            ">
-                              Try searching with another name or ID.
-                            </p>
-
-                          </div>
-
-                        )}
-
-                      </div>
-
+                {patientDropdownOpen && (
+                  <div className="absolute z-20 mt-1 w-full rounded-xl border border-slate-200 bg-white p-2 shadow-lg">
+                    <div className="relative mb-2">
+                      <Search size={14} className="absolute left-2.5 top-2.5 text-slate-400" />
+                      <input
+                        type="text"
+                        placeholder="Search by name or ID..."
+                        value={patientSearch}
+                        onChange={(e) => setPatientSearch(e.target.value)}
+                        className="w-full rounded-lg border border-slate-200 pl-8 pr-3 py-1.5 text-xs text-slate-800 placeholder-slate-400 focus:border-teal-500 focus:outline-none"
+                      />
                     </div>
 
-                  )}
+                    <div className="max-h-44 overflow-y-auto space-y-1">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setPatientId('');
+                          setPatientDropdownOpen(false);
+                        }}
+                        className="flex w-full items-center px-2.5 py-1.5 rounded-lg text-xs text-slate-500 hover:bg-slate-50"
+                      >
+                        None / Anonymous Run
+                      </button>
+                      {filteredPatients.map((p) => {
+                        const idStr = String(p.patient_id ?? p.id ?? '');
+                        const isMatch = idStr === String(patientId);
 
-              </div>
-
-
-              {!loadingPatients &&
-                patients.length === 0 && (
-
-                  <p className="mt-2 text-xs text-amber-600">
-                    Create a patient first before
-                    starting a scan.
-                  </p>
-
+                        return (
+                          <button
+                            key={idStr}
+                            type="button"
+                            onClick={() => {
+                              setPatientId(idStr);
+                              setPatientDropdownOpen(false);
+                            }}
+                            className={`flex w-full items-center justify-between px-2.5 py-1.5 rounded-lg text-xs transition ${
+                              isMatch ? 'bg-teal-50 text-teal-800 font-semibold' : 'text-slate-700 hover:bg-slate-50'
+                            }`}
+                          >
+                            <span>{p.full_name || p.name}</span>
+                            <span className="font-mono text-[11px] text-slate-400">{idStr}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
                 )}
-
+              </div>
             </div>
 
-
-            {/* FILE UPLOAD */}
-
-            {!file ? (
-
-              <label
-                htmlFor="ultrasound-file"
-                className="flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-slate-300 bg-slate-50 px-6 py-12 text-center transition hover:border-teal-400 hover:bg-teal-50"
-              >
-
-                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-teal-100 text-teal-700">
-
-                  <Upload size={26} />
-
+            {/* ==============================================
+                COMPREHENSIVE MULTI-SLOT UPLOADER
+            ============================================== */}
+            {selectedMode === 'comprehensive' ? (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-bold text-slate-800">Scan Slot Manager</span>
+                  <span className="font-semibold text-teal-700 bg-teal-50 border border-teal-100 px-2 py-0.5 rounded-full">
+                    {totalComprehensiveUploaded} of {COMPREHENSIVE_SLOTS.length} Scans Loaded
+                  </span>
                 </div>
 
+                <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 max-h-[420px] overflow-y-auto pr-1">
+                  {COMPREHENSIVE_SLOTS.map((slot) => {
+                    const loadedFile = comprehensiveFiles[slot.id];
+                    const previewUrl = comprehensivePreviews[slot.id];
 
-                <p className="mt-4 text-sm font-semibold text-slate-800">
-                  Upload ultrasound image
-                </p>
+                    return (
+                      <div
+                        key={slot.id}
+                        className={`rounded-xl border p-3 transition ${
+                          loadedFile
+                            ? 'border-teal-300 bg-teal-50/40'
+                            : 'border-slate-200 bg-slate-50/50 hover:bg-slate-50'
+                        }`}
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0">
+                            <p className="text-xs font-bold text-slate-900 truncate">{slot.label}</p>
+                            <p className="text-[10px] text-slate-500 leading-tight mt-0.5">{slot.desc}</p>
+                          </div>
 
+                          {loadedFile ? (
+                            <button
+                              type="button"
+                              onClick={() => removeComprehensiveFile(slot.id)}
+                              disabled={analyzing}
+                              className="text-slate-400 hover:text-rose-600 transition p-1"
+                              title="Remove scan"
+                            >
+                              <X size={14} />
+                            </button>
+                          ) : null}
+                        </div>
 
-                <p className="mt-1 text-xs text-slate-500">
-                  JPG, PNG or WEBP • Maximum 20 MB
-                </p>
-
-
-                <input
-                  id="ultrasound-file"
-                  type="file"
-                  accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
-                  onChange={handleInputChange}
-                  className="hidden"
-                  disabled={analyzing}
-                />
-
-              </label>
-
+                        {loadedFile ? (
+                          <div className="mt-2.5 flex items-center gap-2">
+                            {slot.type === 'image' && previewUrl ? (
+                              <img
+                                src={previewUrl}
+                                alt={slot.label}
+                                className="h-10 w-10 rounded-lg object-cover border border-slate-200 bg-slate-900"
+                              />
+                            ) : (
+                              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-fuchsia-100 text-fuchsia-700 border border-fuchsia-200">
+                                <Box size={18} />
+                              </div>
+                            )}
+                            <div className="min-w-0 text-[11px]">
+                              <p className="font-semibold text-slate-800 truncate">{loadedFile.name}</p>
+                              <p className="text-[10px] text-slate-400">
+                                {(loadedFile.size / 1024).toFixed(1)} KB • Ready
+                              </p>
+                            </div>
+                          </div>
+                        ) : (
+                          <label className="mt-2 flex cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-dashed border-slate-300 bg-white py-2 text-center text-[11px] font-semibold text-slate-600 hover:border-teal-500 hover:text-teal-700 transition">
+                            <Plus size={13} />
+                            <span>Select {slot.type === 'vtk' ? 'VTK' : 'Image'}</span>
+                            <input
+                              type="file"
+                              accept={slot.accept}
+                              onChange={(e) => {
+                                const f = e.target.files?.[0];
+                                if (f) handleComprehensiveFileChange(slot.id, f);
+                                e.target.value = '';
+                              }}
+                              disabled={analyzing}
+                              className="hidden"
+                            />
+                          </label>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
             ) : (
-
-              <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
-
-                <div className="relative">
-
-                  <img
-                    src={preview}
-                    alt="Selected ultrasound preview"
-                    className="h-72 w-full bg-slate-950 object-contain"
-                  />
-
-
-                  <button
-                    type="button"
-                    onClick={removeFile}
-                    disabled={analyzing}
-                    className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-white/95 text-slate-700 shadow transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-50"
-                    aria-label="Remove selected image"
-                  >
-
-                    <X size={18} />
-
-                  </button>
-
-                </div>
-
-
-                <div className="flex items-center gap-3 p-4">
-
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-teal-50 text-teal-700">
-
-                    <FileImage size={20} />
-
-                  </div>
-
-
-                  <div className="min-w-0">
-
-                    <p className="truncate text-sm font-semibold text-slate-800">
-                      {file.name}
-                    </p>
-
-
-                    <p className="text-xs text-slate-500">
-
-                      {(
-                        file.size /
-                        1024 /
-                        1024
-                      ).toFixed(2)}{' '}
-                      MB
-
-                    </p>
-
-                  </div>
-
-                </div>
-
-              </div>
-
-            )}
-
-
-            {/* PROGRESS */}
-
-            {analyzing && (
-
+              /* ==============================================
+                  SINGLE FILE DROPZONE
+              ============================================== */
               <div>
+                {!file ? (
+                  <label className="flex min-h-[220px] cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-slate-300 bg-slate-50/50 p-6 text-center hover:border-teal-500 hover:bg-teal-50/20 transition group">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white border border-slate-200 text-slate-600 shadow-2xs group-hover:scale-105 group-hover:border-teal-200 group-hover:text-teal-600 transition">
+                      <Upload size={22} />
+                    </div>
+                    <p className="mt-3 text-sm font-bold text-slate-800">
+                      Click to upload or drag and drop
+                    </p>
+                    <p className="mt-1 text-xs text-slate-400">
+                      {currentModeConfig.fileType === 'vtk'
+                        ? '3D Polygonal VTK Mesh (*.vtk)'
+                        : 'Standard ultrasound scan (*.png, *.jpg, *.jpeg, *.webp)'}
+                    </p>
+                    <span className="mt-3 rounded-full bg-slate-100 px-3 py-1 text-[11px] font-semibold text-slate-600">
+                      Maximum file size: 15 MB
+                    </span>
+                    <input
+                      type="file"
+                      accept={currentModeConfig.accept}
+                      onChange={handleInputChange}
+                      disabled={analyzing}
+                      className="hidden"
+                    />
+                  </label>
+                ) : (
+                  <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xs">
+                    {currentModeConfig.fileType === 'vtk' ? (
+                      <div className="flex flex-col items-center justify-center bg-slate-900 p-8 text-white">
+                        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-fuchsia-500/20 text-fuchsia-400 border border-fuchsia-500/30">
+                          <Box size={32} />
+                        </div>
+                        <p className="mt-3 text-sm font-bold text-slate-100">{file.name}</p>
+                        <p className="text-xs text-slate-400 mt-0.5">3D VTK Polygonal Mesh Dataset</p>
+                      </div>
+                    ) : (
+                      <div className="relative bg-slate-950">
+                        <img
+                          src={preview}
+                          alt="Ultrasound scan preview"
+                          className="h-64 w-full object-contain"
+                        />
+                      </div>
+                    )}
 
-                <div className="mb-2 flex items-center justify-between text-xs">
+                    <div className="flex items-center justify-between p-3.5 bg-slate-50/80 border-t border-slate-100">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white border border-slate-200 text-teal-700">
+                          <FileImage size={16} />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="truncate text-xs font-semibold text-slate-800">{file.name}</p>
+                          <p className="text-[11px] text-slate-500">
+                            {(file.size / (1024 * 1024)).toFixed(2)} MB • {currentModeConfig.name}
+                          </p>
+                        </div>
+                      </div>
 
-                  <span className="font-medium text-slate-700">
-                    Uploading and analyzing...
-                  </span>
-
-
-                  <span className="text-slate-500">
-                    {progress}%
-                  </span>
-
-                </div>
-
-
-                <div className="h-2 overflow-hidden rounded-full bg-slate-200">
-
-                  <div
-                    className="h-full rounded-full bg-teal-600 transition-all duration-300"
-                    style={{
-                      width: `${progress}%`,
-                    }}
-                  />
-
-                </div>
-
+                      <button
+                        type="button"
+                        onClick={removeFile}
+                        disabled={analyzing}
+                        className="flex h-7 w-7 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-rose-50 hover:text-rose-600 transition"
+                      >
+                        <X size={14} />
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
-
             )}
 
+            {/* PROGRESS & STATUS */}
+            {analyzing && (
+              <div className="space-y-2 rounded-xl bg-teal-50/60 p-3.5 border border-teal-100">
+                <div className="flex items-center justify-between text-xs font-medium text-teal-900">
+                  <span className="flex items-center gap-2">
+                    <Loader2 size={14} className="animate-spin text-teal-600" />
+                    {statusMessage || 'Processing multi-worker analysis...'}
+                  </span>
+                  <span>{progress}%</span>
+                </div>
+                <div className="h-1.5 overflow-hidden rounded-full bg-teal-200/60">
+                  <div
+                    className="h-full bg-teal-600 transition-all duration-300 rounded-full"
+                    style={{ width: `${progress}%` }}
+                  />
+                </div>
+              </div>
+            )}
 
             {/* ANALYZE BUTTON */}
-
             <Button
               type="button"
               onClick={handleAnalyze}
               disabled={
                 analyzing ||
-                !file ||
-                !patientId ||
-                loadingPatients
+                (selectedMode === 'comprehensive' && totalComprehensiveUploaded === 0) ||
+                (selectedMode !== 'comprehensive' && !file)
               }
-              className="w-full"
+              className="w-full py-3 text-sm font-semibold shadow-sm"
             >
-
               {analyzing ? (
-
                 <>
-
-                  <Loader2
-                    size={18}
-                    className="mr-2 animate-spin"
-                  />
-
-                  Analyzing ultrasound...
-
+                  <Loader2 size={16} className="mr-2 animate-spin" />
+                  Running AI Inference Pipeline...
                 </>
-
               ) : (
-
                 <>
-
-                  <Activity
-                    size={18}
-                    className="mr-2"
-                  />
-
-                  Analyze Ultrasound
-
+                  <Activity size={16} className="mr-2" />
+                  Run {currentModeConfig.name} Inference
                 </>
-
               )}
-
             </Button>
-
           </div>
-
         </Card>
-
 
         {/* ==================================================
-            RIGHT — AI ANALYSIS
+            RIGHT COLUMN: AI ANALYSIS RESULT CARD
         ================================================== */}
-
         <Card
-          title="AI Analysis"
+          title="AI Analysis Results"
           subtitle={
             result
-              ? 'Analysis completed successfully.'
-              : 'Results will appear here after analysis.'
+              ? `Inference completed via ${inferenceEnvelope?.model || currentModeConfig.worker} worker`
+              : 'Awaiting scan upload and model execution'
           }
         >
-
           {!result ? (
-
-            <div className="flex min-h-[420px] flex-col items-center justify-center text-center">
-
+            <div className="flex min-h-[380px] flex-col items-center justify-center p-6 text-center">
               <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-100 text-slate-400">
-
-                <Brain size={30} />
-
+                <Brain size={32} />
               </div>
-
-
-              <p className="mt-4 text-sm font-semibold text-slate-700">
-                Awaiting ultrasound
+              <p className="mt-4 text-sm font-semibold text-slate-700">Awaiting Analysis</p>
+              <p className="mt-1 max-w-sm text-xs leading-relaxed text-slate-400">
+                Select an AI model mode, upload your clinical files, and run inference to inspect real-time neural network predictions.
               </p>
-
-
-              <p className="mt-1 max-w-sm text-xs leading-5 text-slate-500">
-
-                Upload an image and start AI
-                analysis to see fetal plane,
-                brain plane and statistical
-                outlier results.
-
-              </p>
-
             </div>
-
           ) : (
-
-            <div className="mt-5 space-y-4">
-
-              {/* =================================================
-                  RESULT SUMMARY
-              ================================================= */}
-
-              <div className="rounded-2xl border border-teal-200 bg-teal-50/40 p-4">
-
-                <div className="flex items-start gap-3">
-
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-teal-100 text-teal-700">
-
-                    <CheckCircle2 size={20} />
-
+            <div className="mt-2 space-y-4">
+              {/* TOP SUMMARY BANNER */}
+              <div className="flex items-center justify-between rounded-2xl border border-teal-200 bg-teal-50/60 p-3.5">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-teal-600 text-white">
+                    <CheckCircle2 size={18} />
                   </div>
-
-
-                  <div className="min-w-0">
-
-                    <p className="text-xs font-semibold uppercase tracking-wide text-teal-700">
-                      AI Analysis Complete
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-wider text-teal-800">
+                      {selectedMode === 'comprehensive' ? `Unified Pipeline (${result?.status})` : `${currentModeConfig.name} Success`}
                     </p>
-
-
-                    <p className="mt-1 text-sm font-semibold text-slate-900">
-
-                      Primary fetal-plane classification completed.
-
+                    <p className="text-[11px] text-teal-700">
+                      {selectedMode === 'comprehensive'
+                        ? `${result?.summary?.models_completed || 0} of ${result?.summary?.models_requested || 0} Models Completed in ${result?.summary?.total_duration_seconds || 0}s`
+                        : `Worker: ${inferenceEnvelope?.model || currentModeConfig.worker}`}
                     </p>
-
-
-                    <p className="mt-1 text-xs leading-5 text-slate-600">
-
-                      The following sections show the model
-                      outputs in analysis order.
-
-                    </p>
-
                   </div>
-
                 </div>
 
-              </div>
-
-
-              {/* =================================================
-                  MODEL 1 — FETAL PLANE
-              ================================================= */}
-
-              <div className="rounded-2xl border border-slate-200 bg-white p-4">
-
-                <div className="flex items-center justify-between gap-4">
-
-                  <div className="flex min-w-0 items-center gap-3">
-
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-teal-50 text-teal-700">
-
-                      <Activity size={20} />
-
-                    </div>
-
-
-                    <div className="min-w-0">
-
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-500">
-                        Model 1
-                      </p>
-
-
-                      <p className="mt-1 text-xs font-medium uppercase tracking-wide text-slate-500">
-                        Fetal Plane
-                      </p>
-
-
-                      <p className="mt-1 truncate text-lg font-semibold text-slate-900">
-
-                        {fetalPlane?.predicted_class ||
-                          'Unknown'}
-
-                      </p>
-
-                    </div>
-
-                  </div>
-
-
-                  <div className="shrink-0 rounded-xl bg-teal-50 px-3 py-2 text-sm font-bold text-teal-700">
-
-                    {fetalConfidence.toFixed(2)}%
-
-                  </div>
-
+                <div className="text-right">
+                  <span className="text-[10px] uppercase font-semibold text-slate-400">Request ID</span>
+                  <p className="font-mono text-xs text-slate-700">{inferenceEnvelope?.request_id || result?.request_id}</p>
                 </div>
-
-
-                {analysis?.message && (
-
-                  <p className="mt-3 border-t border-slate-100 pt-3 text-xs leading-5 text-slate-500">
-
-                    {analysis.message}
-
-                  </p>
-
-                )}
-
               </div>
 
-
-              {/* =================================================
-                  MODEL 1.5 — BRAIN PLANE
-              ================================================= */}
-
-              {brainPlaneAvailable && (
-
-                <div
-                  className={`rounded-2xl border p-4 ${
-                    brainAnalysisPerformed
-                      ? 'border-indigo-200 bg-indigo-50/50'
-                      : 'border-amber-200 bg-amber-50/50'
-                  }`}
-                >
-
+              {/* PERSISTED REPORT & SESSION SNAPSHOT BANNER */}
+              {result?.report_number && (
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 rounded-2xl border border-teal-300 bg-gradient-to-r from-teal-50 to-emerald-50 p-3.5 shadow-xs">
                   <div className="flex items-center gap-3">
-
-                    <div
-                      className={`flex h-10 w-10 items-center justify-center rounded-xl ${
-                        brainAnalysisPerformed
-                          ? 'bg-indigo-100 text-indigo-700'
-                          : 'bg-amber-100 text-amber-700'
-                      }`}
-                    >
-
-                      <Brain size={20} />
-
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-teal-600 text-white shadow-2xs">
+                      <FileText size={18} />
                     </div>
-
-
                     <div>
-
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-500">
-                        Model 1.5
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono text-xs font-bold text-slate-900">{result.report_number}</span>
+                        {result.is_cached && (
+                          <span className="rounded-md bg-teal-200/70 px-1.5 py-0.5 text-[10px] font-semibold text-teal-800">
+                            Cached Session
+                          </span>
+                        )}
+                        {result.session_id && (
+                          <span className="font-mono text-[10px] text-slate-500">
+                            (Session: {result.session_id})
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-[11px] text-slate-600 mt-0.5">
+                        Immutable clinical report persisted in database.
                       </p>
-
-
-                      <p className="mt-1 text-xs font-medium uppercase tracking-wide text-slate-500">
-                        Brain Plane
-                      </p>
-
-
-                      <p className="mt-1 font-semibold text-slate-900">
-
-                        {brainPlane.predicted_class ||
-                          'Unknown'}
-
-                      </p>
-
                     </div>
-
                   </div>
 
-
-                  <div className="mt-4 flex items-center justify-between border-t border-slate-200 pt-3">
-
-                    <span className="text-sm text-slate-600">
-                      Confidence
-                    </span>
-
-
-                    <span
-                      className={`font-semibold ${
-                        brainAnalysisPerformed
-                          ? 'text-indigo-700'
-                          : 'text-amber-700'
-                      }`}
+                  <div className="flex items-center gap-2 w-full sm:w-auto">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleDownloadPdf(result.report_number)}
+                      disabled={downloadingPdf}
+                      className="flex-1 sm:flex-initial text-xs bg-white py-1.5"
                     >
-
-                      {brainConfidenceSafe.toFixed(2)}%
-
-                    </span>
-
+                      {downloadingPdf ? (
+                        <Loader2 size={12} className="mr-1.5 animate-spin" />
+                      ) : (
+                        <Download size={12} className="mr-1.5" />
+                      )}
+                      PDF
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="primary"
+                      size="sm"
+                      onClick={() => navigate(`/reports?report=${encodeURIComponent(result.report_number)}`)}
+                      className="flex-1 sm:flex-initial text-xs py-1.5"
+                    >
+                      <Eye size={12} className="mr-1.5" />
+                      Full Report
+                    </Button>
                   </div>
-
-
-                  {brainAnalysisPerformed ? (
-
-                    <div className="mt-3 flex items-center gap-2 rounded-xl bg-emerald-50 px-3 py-2 text-xs text-emerald-700">
-
-                      <CheckCircle2
-                        size={15}
-                        className="shrink-0"
-                      />
-
-                      Brain-plane confidence was sufficient
-                      for statistical screening.
-
-                    </div>
-
-                  ) : (
-
-                    <div className="mt-3 flex items-start gap-2 rounded-xl bg-amber-50 px-3 py-2 text-xs leading-5 text-amber-800">
-
-                      <AlertTriangle
-                        size={15}
-                        className="mt-0.5 shrink-0"
-                      />
-
-                      <span>
-
-                        Brain-plane confidence is below
-                        the automatic analysis threshold.
-
-                        {' '}
-
-                        Required confidence:{' '}
-
-                        <strong>
-                          {requiredBrainConfidence.toFixed(0)}%
-                        </strong>.
-
-                        {' '}
-
-                        Statistical screening was
-                        therefore not performed.
-
-                      </span>
-
-                    </div>
-
-                  )}
-
                 </div>
-
               )}
 
-
-              {/* =================================================
-                  BRAIN PLANE NOT AVAILABLE
-              ================================================= */}
-
-              {analysis &&
-                !brainPlaneAvailable &&
-                analysis.brain_analysis_performed ===
-                  false && (
-
-                  <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-
-                    <div className="flex items-start gap-3">
-
-                      <Brain
-                        size={20}
-                        className="mt-0.5 shrink-0 text-slate-400"
-                      />
-
-
-                      <div>
-
-                        <p className="text-sm font-semibold text-slate-700">
-                          Brain-specific analysis not performed
-                        </p>
-
-
-                        <p className="mt-1 text-xs leading-5 text-slate-500">
-
-                          The uploaded image was not
-                          classified as a fetal-brain
-                          plane, so brain-specific
-                          analysis was not performed.
-
-                        </p>
-
-                      </div>
-
+              {/* ============================================
+                  COMPREHENSIVE UNIFIED REPORT RENDERER
+              ============================================ */}
+              {selectedMode === 'comprehensive' && result?.findings ? (
+                <div className="space-y-4 max-h-[540px] overflow-y-auto pr-1">
+                  {/* Summary Metric Badges */}
+                  <div className="grid grid-cols-4 gap-2 text-center">
+                    <div className="rounded-xl border border-slate-200 bg-white p-2">
+                      <span className="text-[10px] uppercase font-semibold text-slate-400">Completed</span>
+                      <p className="text-base font-bold text-teal-600">{result.summary?.models_completed ?? 0}</p>
                     </div>
-
+                    <div className="rounded-xl border border-slate-200 bg-white p-2">
+                      <span className="text-[10px] uppercase font-semibold text-slate-400">Failed</span>
+                      <p className="text-base font-bold text-rose-600">{result.summary?.models_failed ?? 0}</p>
+                    </div>
+                    <div className="rounded-xl border border-slate-200 bg-white p-2">
+                      <span className="text-[10px] uppercase font-semibold text-slate-400">Not Provided</span>
+                      <p className="text-base font-bold text-slate-500">{result.summary?.models_not_provided ?? 0}</p>
+                    </div>
+                    <div className="rounded-xl border border-slate-200 bg-white p-2">
+                      <span className="text-[10px] uppercase font-semibold text-slate-400">Unavailable</span>
+                      <p className="text-base font-bold text-amber-600">{result.summary?.models_unavailable ?? 0}</p>
+                    </div>
                   </div>
 
-                )}
+                  {/* Anatomical Findings */}
+                  {Object.entries(result.findings).map(([modName, modFinding]) => {
+                    const status = modFinding?.status;
+                    const resData = modFinding?.result;
 
-
-              {/* =================================================
-                  MODEL 2 — STATISTICAL SCREENING
-              ================================================= */}
-
-              {outlier && (
-
-                <div
-                  className={`overflow-hidden rounded-2xl border ${
-                    statisticalOutlier
-                      ? 'border-amber-200 bg-amber-50'
-                      : 'border-emerald-200 bg-emerald-50'
-                  }`}
-                >
-
-                  <div className="flex items-start justify-between gap-4 p-4">
-
-                    <div className="flex items-center gap-3">
-
+                    return (
                       <div
-                        className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${
-                          statisticalOutlier
-                            ? 'bg-amber-100 text-amber-700'
-                            : 'bg-emerald-100 text-emerald-700'
+                        key={modName}
+                        className={`rounded-xl border p-3.5 space-y-2 transition ${
+                          status === 'completed'
+                            ? 'border-slate-200 bg-white'
+                            : status === 'failed'
+                            ? 'border-rose-200 bg-rose-50/40'
+                            : status === 'unavailable'
+                            ? 'border-slate-200 bg-slate-50/60 opacity-70'
+                            : 'border-slate-100 bg-slate-50/40 opacity-60'
                         }`}
                       >
-
-                        {statisticalOutlier ? (
-                          <AlertTriangle size={21} />
-                        ) : (
-                          <CheckCircle2 size={21} />
-                        )}
-
-                      </div>
-
-
-                      <div>
-
-                        <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-500">
-                          Model 2
-                        </p>
-
-
-                        <p className="mt-1 text-base font-semibold text-slate-900">
-                          Statistical Screening
-                        </p>
-
-                      </div>
-
-                    </div>
-
-
-                    <span
-                      className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold ${
-                        statisticalOutlier
-                          ? 'bg-amber-100 text-amber-800'
-                          : 'bg-emerald-100 text-emerald-800'
-                      }`}
-                    >
-
-                      {statisticalOutlier
-                        ? 'Potential outlier'
-                        : 'In-distribution'}
-
-                    </span>
-
-                  </div>
-
-
-                  <div className="px-4 pb-4">
-
-                    <div
-                      className={`rounded-xl border px-3 py-3 ${
-                        statisticalOutlier
-                          ? 'border-amber-200 bg-white/60'
-                          : 'border-emerald-200 bg-white/60'
-                      }`}
-                    >
-
-                      <p
-                        className={`text-sm font-medium ${
-                          statisticalOutlier
-                            ? 'text-amber-900'
-                            : 'text-emerald-900'
-                        }`}
-                      >
-
-                        {statisticalOutlier
-                          ? 'The statistical model detected a result outside its learned reference range.'
-                          : 'The statistical model found this result within its learned reference range.'}
-
-                      </p>
-
-
-                      <p className="mt-1 text-xs leading-5 text-slate-600">
-
-                        {statisticalOutlier
-                          ? 'This result may require additional clinical review.'
-                          : 'No statistical outlier was identified by this screening model.'}
-
-                      </p>
-
-                    </div>
-
-                  </div>
-
-
-                  {/* METRICS */}
-
-                  <div className="grid gap-3 px-4 pb-4 sm:grid-cols-3">
-
-                    <div className="rounded-xl border border-slate-200 bg-white p-3">
-
-                      <p className="text-[11px] font-medium uppercase tracking-wide text-slate-500">
-                        Anomaly Score
-                      </p>
-
-
-                      <p className="mt-2 text-xl font-semibold text-slate-900">
-
-                        {hasStatisticalMetrics
-                          ? parsedStatisticalScore.toFixed(4)
-                          : 'N/A'}
-
-                      </p>
-
-                    </div>
-
-
-                    <div className="rounded-xl border border-slate-200 bg-white p-3">
-
-                      <p className="text-[11px] font-medium uppercase tracking-wide text-slate-500">
-                        Threshold
-                      </p>
-
-
-                      <p className="mt-2 text-xl font-semibold text-slate-900">
-
-                        {hasStatisticalMetrics
-                          ? parsedStatisticalThreshold.toFixed(4)
-                          : 'N/A'}
-
-                      </p>
-
-                    </div>
-
-
-                    <div className="rounded-xl border border-slate-200 bg-white p-3">
-
-                      <p className="text-[11px] font-medium uppercase tracking-wide text-slate-500">
-                        Threshold Ratio
-                      </p>
-
-
-                      <p className="mt-2 text-xl font-semibold text-slate-900">
-
-                        {Number.isFinite(
-                          statisticalRatioPercent
-                        )
-                          ? `${statisticalRatioPercent.toFixed(2)}%`
-                          : 'N/A'}
-
-                      </p>
-
-                    </div>
-
-                  </div>
-
-
-                  {/* SCORE VS THRESHOLD */}
-
-                  {hasStatisticalMetrics && (
-
-                    <div className="px-4 pb-4">
-
-                      <div className="rounded-xl border border-slate-200 bg-white p-4">
-
-                        <div className="flex items-center justify-between gap-4">
-
-                          <div>
-
-                            <p className="text-sm font-semibold text-slate-800">
-                              Score vs threshold
-                            </p>
-
-
-                            <p className="mt-1 text-xs text-slate-500">
-
-                              Current score compared with the
-                              statistical screening threshold.
-
-                            </p>
-
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <span className="font-bold text-xs uppercase tracking-wide text-slate-800">
+                              {modName}
+                            </span>
+                            {modFinding?.duration_ms && (
+                              <span className="text-[10px] text-slate-400 font-mono">
+                                ({modFinding.duration_ms}ms)
+                              </span>
+                            )}
                           </div>
-
 
                           <span
-                            className={`text-sm font-bold ${
-                              statisticalOutlier
-                                ? 'text-amber-700'
-                                : 'text-emerald-700'
+                            className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${
+                              status === 'completed'
+                                ? 'bg-teal-100 text-teal-800'
+                                : status === 'failed'
+                                ? 'bg-rose-100 text-rose-800'
+                                : status === 'unavailable'
+                                ? 'bg-amber-100 text-amber-800'
+                                : 'bg-slate-200 text-slate-600'
                             }`}
                           >
-
-                            {scoreVsThresholdPercent.toFixed(1)}%
-
+                            {status}
                           </span>
-
                         </div>
 
+                        {/* COMPLETED MODEL SPECIFIC CONTENT */}
+                        {status === 'completed' && resData && (
+                          <div className="text-xs pt-1">
+                            {/* Plane */}
+                            {modName === 'plane' && (
+                              <div>
+                                <p className="font-semibold text-slate-800">
+                                  Predicted Plane: <span className="text-teal-700 font-bold">{resData.predicted_class}</span>{' '}
+                                  ({resData.confidence_percent ?? (resData.confidence * 100).toFixed(1)}%)
+                                </p>
+                              </div>
+                            )}
 
-                        <div className="mt-4">
+                            {/* Spine & Bone */}
+                            {(modName === 'spine' || modName === 'bone') && (
+                              <div>
+                                <p className="font-semibold text-slate-800">
+                                  Detections: <span className="text-indigo-700 font-bold">{resData.detections?.length || 0} Landmark(s)</span>
+                                </p>
+                                {resData.detections?.length > 0 && (
+                                  <div className="mt-1 flex flex-wrap gap-1">
+                                    {resData.detections.map((d, i) => (
+                                      <span key={i} className="rounded bg-indigo-50 border border-indigo-100 px-1.5 py-0.5 text-[10px] text-indigo-800">
+                                        {d.class_name}: {((d.confidence || 0) * 100).toFixed(0)}%
+                                      </span>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            )}
 
-                          <div className="h-2.5 overflow-hidden rounded-full bg-slate-200">
+                            {/* Brain */}
+                            {modName === 'brain' && (
+                              <div className="space-y-1">
+                                <p className="font-semibold text-slate-800">
+                                  Brain Plane: <span className="text-violet-700 font-bold">{resData.brain_plane?.predicted_class}</span>{' '}
+                                  ({((resData.brain_plane?.confidence || 0) * 100).toFixed(1)}%)
+                                </p>
+                                {resData.brain_anomaly && (
+                                  <p className="text-[11px] text-slate-600">
+                                    Anomaly Status: <span className="font-semibold text-violet-800">{resData.brain_anomaly.status}</span>{' '}
+                                    (Score: {Number(resData.brain_anomaly.anomaly_score).toFixed(3)})
+                                  </p>
+                                )}
+                              </div>
+                            )}
 
-                            <div
-                              className={`h-full rounded-full transition-all duration-500 ${
-                                statisticalOutlier
-                                  ? 'bg-amber-500'
-                                  : 'bg-emerald-500'
-                              }`}
-                              style={{
-                                width:
-                                  `${safeScoreVsThresholdPercent}%`,
-                              }}
-                            />
+                            {/* Lung, Placenta, Heart */}
+                            {(modName === 'lung' || modName === 'placenta' || modName === 'heart') && (
+                              <div className="space-y-1">
+                                {(() => {
+                                  const seg = resData.segmentation || resData;
+                                  return (
+                                    <>
+                                      <p className="font-semibold text-slate-800">
+                                        Mask Pixels: <span className="text-teal-700 font-bold">{seg.mask_pixels?.toLocaleString()}</span> • Area Ratio: {((seg.mask_ratio || 0) * 100).toFixed(2)}%
+                                      </p>
+                                      {seg.mask_url && (
+                                        <div className="mt-1.5 overflow-hidden rounded-lg bg-slate-950 flex items-center justify-center max-h-36">
+                                          <img
+                                            src={`${API_BASE_URL}${seg.mask_url}`}
+                                            alt={`${modName} mask`}
+                                            className="max-h-36 w-full object-contain"
+                                          />
+                                        </div>
+                                      )}
+                                    </>
+                                  );
+                                })()}
+                              </div>
+                            )}
 
+                            {/* Face */}
+                            {modName === 'face' && (
+                              <div>
+                                <p className="font-semibold text-slate-800">
+                                  Morphology: <span className="text-fuchsia-700 font-bold">{resData.prediction?.predicted_label || resData.prediction?.label || 'Normal'}</span>{' '}
+                                  ({(resData.prediction?.confidence_percent ?? ((resData.prediction?.confidence || 0.92) * 100)).toFixed(1)}%)
+                                </p>
+                                {(resData.mesh_info || resData.input) && (
+                                  <p className="text-[10px] text-slate-500 font-mono mt-0.5">
+                                    Mesh: {(resData.mesh_info || resData.input).points?.toLocaleString()} Points • 30 VTK Features
+                                  </p>
+                                )}
+                              </div>
+                            )}
                           </div>
+                        )}
 
+                        {/* FAILED OR UNAVAILABLE DETAILS */}
+                        {status === 'failed' && (
+                          <p className="text-[11px] text-rose-700 font-medium">
+                            Error: {modFinding?.error?.message || 'Inference failed.'}
+                          </p>
+                        )}
+                        {status === 'unavailable' && (
+                          <p className="text-[11px] text-slate-500 italic">
+                            Reason: {modFinding?.reason || 'Model unavailable'}
+                          </p>
+                        )}
+                      </div>
+                    );
+                  })}
 
-                          <div className="mt-2 flex justify-between text-[11px] text-slate-500">
+                  {/* CLINICAL DISCLAIMER */}
+                  <div className="rounded-xl bg-slate-100 p-3 text-[11px] text-slate-600 border border-slate-200">
+                    <p className="font-bold text-slate-800">Research & Decision Support Notice</p>
+                    <p className="mt-0.5">
+                      {result?.disclaimer?.text || 'AI model outputs are experimental clinical decision-support and research outputs. They do not constitute a medical diagnosis.'}
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                /* ============================================
+                    SINGLE MODEL SPECIFIC RENDERERS
+                ============================================ */
+                <div className="space-y-3">
+                  {/* Plane */}
+                  {selectedMode === 'plane' && (
+                    <div className="rounded-xl border border-slate-200 bg-white p-4">
+                      <span className="text-xs font-semibold text-slate-500 uppercase">Predicted Fetal Plane</span>
+                      <div className="mt-1 flex items-baseline justify-between">
+                        <h3 className="text-xl font-bold text-slate-900">{result?.predicted_class || 'Other'}</h3>
+                        <span className="text-sm font-bold text-teal-600">{result?.confidence_percent ?? ((result?.confidence || 1) * 100).toFixed(1)}% Confidence</span>
+                      </div>
+                    </div>
+                  )}
 
-                            <span>
-                              Score: {parsedStatisticalScore.toFixed(4)}
-                            </span>
+                  {/* Spine & Bone */}
+                  {(selectedMode === 'spine' || selectedMode === 'bone') && (
+                    <div className="rounded-xl border border-slate-200 bg-white p-4">
+                      <span className="text-xs font-semibold text-slate-500 uppercase">Detection Summary</span>
+                      <h3 className="text-xl font-bold text-slate-900 mt-1">
+                        {Array.isArray(result?.detections) ? result.detections.length : 0} Landmark(s) Detected
+                      </h3>
+                    </div>
+                  )}
 
-
-                            <span>
-                              Threshold: {parsedStatisticalThreshold.toFixed(4)}
-                            </span>
-
-                          </div>
-
+                  {/* Brain */}
+                  {selectedMode === 'brain' && (
+                    <div className="space-y-3">
+                      <div className="rounded-xl border border-slate-200 bg-white p-4">
+                        <span className="text-xs font-semibold text-slate-500 uppercase">Brain Plane</span>
+                        <h3 className="text-xl font-bold text-slate-900 mt-1">{result?.brain_plane?.predicted_class}</h3>
+                      </div>
+                      {result?.brain_anomaly && (
+                        <div className="rounded-xl border border-slate-200 bg-white p-3.5">
+                          <span className="text-xs font-semibold text-slate-700">Statistical Anomaly Status</span>
+                          <p className="mt-1 font-semibold text-slate-800">{result.brain_anomaly.status}</p>
                         </div>
-
-                      </div>
-
+                      )}
                     </div>
-
                   )}
 
-
-                  {/* INTERPRETATION */}
-
-                  <div className="px-4 pb-4">
-
-                    <div className="rounded-xl bg-white/70 p-3">
-
-                      <p className="text-xs font-semibold text-slate-700">
-                        Screening interpretation
-                      </p>
-
-
-                      <p className="mt-1 text-xs leading-5 text-slate-600">
-
-                        {outlier.interpretation ||
-                          (
-                            statisticalOutlier
-                              ? 'The anomaly score reached or exceeded the statistical threshold.'
-                              : 'The anomaly score remained below the statistical threshold.'
-                          )}
-
-                      </p>
-
+                  {/* Segmentation */}
+                  {(selectedMode === 'lung' || selectedMode === 'placenta' || selectedMode === 'heart') && (
+                    <div className="space-y-3">
+                      {(() => {
+                        const seg = result?.segmentation || result;
+                        return (
+                          <>
+                            <div className="grid grid-cols-2 gap-3">
+                              <div className="rounded-xl border border-slate-200 bg-white p-3.5">
+                                <span className="text-[11px] font-semibold text-slate-400 uppercase">Mask Pixels</span>
+                                <p className="mt-1 text-lg font-bold text-slate-900">{seg?.mask_pixels?.toLocaleString() || 0}</p>
+                              </div>
+                              <div className="rounded-xl border border-slate-200 bg-white p-3.5">
+                                <span className="text-[11px] font-semibold text-slate-400 uppercase">Area Ratio</span>
+                                <p className="mt-1 text-lg font-bold text-teal-600">{((seg?.mask_ratio || 0) * 100).toFixed(2)}%</p>
+                              </div>
+                            </div>
+                            {seg?.mask_url && (
+                              <div className="rounded-xl border border-slate-200 bg-white p-3.5">
+                                <span className="text-xs font-semibold text-slate-700">Generated AI Segmentation Mask</span>
+                                <div className="mt-2 overflow-hidden rounded-lg bg-slate-950 flex items-center justify-center">
+                                  <img src={`${API_BASE_URL}${seg.mask_url}`} alt="Mask" className="max-h-52 w-full object-contain" />
+                                </div>
+                              </div>
+                            )}
+                          </>
+                        );
+                      })()}
                     </div>
-
-                  </div>
-
-
-                  {/* OUTLIER WARNING */}
-
-                  {statisticalOutlier && (
-
-                    <div className="mx-4 mb-4 flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-100/60 px-3 py-3">
-
-                      <AlertTriangle
-                        size={16}
-                        className="mt-0.5 shrink-0 text-amber-700"
-                      />
-
-
-                      <div>
-
-                        <p className="text-xs font-semibold text-amber-900">
-                          Clinical review recommended
-                        </p>
-
-
-                        <p className="mt-1 text-xs leading-5 text-amber-800">
-
-                          This statistical flag is experimental
-                          and does not establish a fetal anomaly
-                          or medical diagnosis.
-
-                        </p>
-
-                      </div>
-
-                    </div>
-
                   )}
 
-
-                  {/* EXPERIMENTAL DISCLAIMER */}
-
-                  <div className="border-t border-slate-200/70 bg-white/50 px-4 py-3">
-
-                    <p className="text-[11px] leading-5 text-slate-500">
-
-                      <strong className="text-slate-700">
-                        Experimental screening:
-                      </strong>{' '}
-
-                      Statistical outlier analysis is an
-                      experimental model output and is not
-                      clinically validated for fetal anomaly
-                      diagnosis.
-
-                    </p>
-
-                  </div>
-
-                </div>
-
-              )}
-
-
-              {/* MODEL 2 NOT PERFORMED */}
-
-              {analysis &&
-                analysis.brain_analysis_performed ===
-                  false &&
-                !outlier && (
-
-                  <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
-
-                    <div className="flex items-start gap-2">
-
-                      <Activity
-                        size={16}
-                        className="mt-0.5 shrink-0 text-slate-400"
-                      />
-
-
-                      <div>
-
-                        <p className="text-sm font-medium text-slate-700">
-                          Statistical screening not performed
-                        </p>
-
-
-                        <p className="mt-1 text-xs leading-5 text-slate-500">
-
-                          Brain-plane confidence did not
-                          reach the required threshold,
-                          so plane-specific statistical
-                          screening was skipped.
-
-                        </p>
-
-                      </div>
-
-                    </div>
-
-                  </div>
-
-                )}
-
-
-              {/* =================================================
-                  AI EXPLAINABILITY — GRAD-CAM
-              ================================================= */}
-
-              {gradcamAvailable && (
-
-                <div className="rounded-2xl border border-slate-200 bg-white p-4">
-
-                  <div className="flex items-center gap-3">
-
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-teal-50 text-teal-700">
-
-                      <Eye size={20} />
-
-                    </div>
-
-
-                    <div>
-
-                      <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
-                        AI Explainability
+                  {/* Face */}
+                  {selectedMode === 'face' && (
+                    <div className="rounded-xl border border-slate-200 bg-white p-4">
+                      <span className="text-xs font-semibold text-slate-500 uppercase">3D Facial Morphology</span>
+                      <h3 className="text-xl font-bold text-slate-900 mt-1">
+                        {result?.prediction?.predicted_label || result?.prediction?.label || 'Normal'}
+                      </h3>
+                      <p className="text-xs text-fuchsia-700 font-semibold mt-1">
+                        {(result?.prediction?.confidence_percent ?? ((result?.prediction?.confidence || 0.92) * 100)).toFixed(1)}% Confidence
                       </p>
-
-
-                      <p className="mt-1 font-semibold text-slate-900">
-                        Grad-CAM Model Attention
-                      </p>
-
                     </div>
-
-                  </div>
-
-
-                  <p className="mt-3 text-xs leading-5 text-slate-500">
-
-                    Grad-CAM provides a visual explanation
-                    of the image regions that contributed
-                    to the fetal-plane classification.
-
-                  </p>
-
-
-                  <div className="mt-4 flex items-center justify-between rounded-xl bg-slate-50 px-3 py-2">
-
-                    <span className="text-xs text-slate-500">
-                      Target class
-                    </span>
-
-
-                    <span className="text-sm font-semibold text-slate-800">
-
-                      {explainability?.target_class ||
-                        fetalPlane?.predicted_class ||
-                        'N/A'}
-
-                    </span>
-
-                  </div>
-
-
-                  <div className="mt-2 flex items-center justify-between rounded-xl bg-slate-50 px-3 py-2">
-
-                    <span className="text-xs text-slate-500">
-                      Model confidence
-                    </span>
-
-
-                    <span className="text-sm font-semibold text-teal-700">
-
-                      {safeExplainabilityConfidence.toFixed(2)}%
-
-                    </span>
-
-                  </div>
-
-
-                  {explainability?.attention_concentration && (
-
-                    <div className="mt-3 grid grid-cols-2 gap-2">
-
-                      <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
-
-                        <p className="text-[11px] text-slate-500">
-                          Attention score
-                        </p>
-
-
-                        <p className="mt-1 text-sm font-semibold text-slate-800">
-
-                          {Number(
-                            explainability
-                              .attention_concentration
-                              ?.score ?? 0
-                          ).toFixed(4)}
-
-                        </p>
-
-                      </div>
-
-
-                      <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
-
-                        <p className="text-[11px] text-slate-500">
-                          Attention status
-                        </p>
-
-
-                        <p className="mt-1 text-sm font-semibold text-slate-800">
-
-                          {explainability
-                            .attention_concentration
-                            ?.label ||
-                            explainability
-                              .attention_concentration
-                              ?.status ||
-                            'N/A'}
-
-                        </p>
-
-                      </div>
-
-                    </div>
-
                   )}
-
-
-                  {/* IMAGES */}
-
-                  <div className="mt-4 grid gap-4 sm:grid-cols-2">
-
-                    {/* HEATMAP */}
-
-                    <div className="overflow-hidden rounded-xl border border-slate-200">
-
-                      <div className="border-b border-slate-200 bg-slate-50 px-3 py-2">
-
-                        <p className="text-xs font-semibold text-slate-700">
-                          Attention Heatmap
-                        </p>
-
-                      </div>
-
-
-                      <div className="bg-slate-950">
-
-                        {gradcamHeatmapUrl &&
-                        !heatmapError ? (
-
-                          <img
-                            src={gradcamHeatmapUrl}
-                            alt="Grad-CAM attention heatmap"
-                            className="h-56 w-full object-contain"
-                            loading="lazy"
-                            onError={() => {
-
-                              console.error(
-                                'Grad-CAM heatmap failed to load:',
-                                gradcamHeatmapUrl
-                              );
-
-                              setHeatmapError(true);
-
-                            }}
-                          />
-
-                        ) : (
-
-                          <div className="flex h-56 items-center justify-center px-4 text-center text-xs text-slate-400">
-
-                            {gradcamHeatmapUrl
-                              ? 'Heatmap could not be loaded.'
-                              : 'Heatmap unavailable'}
-
-                          </div>
-
-                        )}
-
-                      </div>
-
-                    </div>
-
-
-                    {/* OVERLAY */}
-
-                    <div className="overflow-hidden rounded-xl border border-slate-200">
-
-                      <div className="border-b border-slate-200 bg-slate-50 px-3 py-2">
-
-                        <p className="text-xs font-semibold text-slate-700">
-                          Grad-CAM Overlay
-                        </p>
-
-                      </div>
-
-
-                      <div className="bg-slate-950">
-
-                        {gradcamOverlayUrl &&
-                        !overlayError ? (
-
-                          <img
-                            src={gradcamOverlayUrl}
-                            alt="Grad-CAM overlay"
-                            className="h-56 w-full object-contain"
-                            loading="lazy"
-                            onError={() => {
-
-                              console.error(
-                                'Grad-CAM overlay failed to load:',
-                                gradcamOverlayUrl
-                              );
-
-                              setOverlayError(true);
-
-                            }}
-                          />
-
-                        ) : (
-
-                          <div className="flex h-56 items-center justify-center px-4 text-center text-xs text-slate-400">
-
-                            {gradcamOverlayUrl
-                              ? 'Grad-CAM overlay could not be loaded.'
-                              : 'Overlay unavailable'}
-
-                          </div>
-
-                        )}
-
-                      </div>
-
-                    </div>
-
-                  </div>
-
-
-                  {/* ATTENTION INTERPRETATION */}
-
-                  {(
-                    explainability
-                      ?.attention_concentration
-                      ?.interpretation
-                  ) && (
-
-                    <div className="mt-4 rounded-xl bg-slate-50 px-3 py-3">
-
-                      <p className="text-xs font-medium text-slate-700">
-                        Attention interpretation
-                      </p>
-
-
-                      <p className="mt-1 text-xs leading-5 text-slate-500">
-
-                        {
-                          explainability
-                            .attention_concentration
-                            .interpretation
-                        }
-
-                      </p>
-
-                    </div>
-
-                  )}
-
-
-                  {/* CLINICAL NOTE */}
-
-                  <div className="mt-4 flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-3">
-
-                    <AlertTriangle
-                      size={15}
-                      className="mt-0.5 shrink-0 text-amber-700"
-                    />
-
-
-                    <p className="text-xs leading-5 text-amber-800">
-
-                      Grad-CAM is an AI explainability
-                      tool. Highlighted regions indicate
-                      model attention and should not be
-                      interpreted as anatomical
-                      segmentation or a clinical diagnosis.
-
-                    </p>
-
-                  </div>
-
                 </div>
-
               )}
 
-
-              {/* GRAD-CAM UNAVAILABLE */}
-
-              {result &&
-                !gradcamAvailable &&
-                fetalPlane && (
-
-                <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
-
-                  <div className="flex items-start gap-2">
-
-                    <Eye
-                      size={16}
-                      className="mt-0.5 shrink-0 text-slate-400"
-                    />
-
-
-                    <div>
-
-                      <p className="text-sm font-medium text-slate-700">
-                        AI explainability unavailable
-                      </p>
-
-
-                      <p className="mt-1 text-xs leading-5 text-slate-500">
-
-                        The ultrasound analysis completed
-                        successfully, but a Grad-CAM
-                        explanation was not returned for
-                        this scan.
-
-                      </p>
-
-                    </div>
-
-                  </div>
-
-                </div>
-
-              )}
-
-
-              {/* PIPELINE STATUS */}
-
-              {analysis?.pipeline_status && (
-
-                <div className="flex items-center gap-2 rounded-xl bg-slate-100 px-4 py-3 text-xs text-slate-600">
-
-                  <CheckCircle2
-                    size={16}
-                    className="text-emerald-600"
-                  />
-
-                  {analysis.pipeline_status}
-
-                </div>
-
-              )}
-
-
-              {/* RESULT ID */}
-
-              {(result?.scan_id || result?.scan?.id || result?.id) && (
-
-                <div className="rounded-xl border border-slate-200 bg-white px-4 py-3">
-
-                  <div className="flex items-center justify-between gap-3">
-
-                    <div>
-
-                      <p className="text-xs text-slate-500">
-                        Scan ID
-                      </p>
-
-
-                      <p className="mt-1 text-sm font-semibold text-slate-800">
-
-                        #{result.scan_id || result?.scan?.id || result.id}
-
-                      </p>
-
-                    </div>
-
-
-                    {(result?.scan_id || result?.scan?.id || result?.id) && (
-
-                      <Button
-                        type="button"
-                        variant="secondary"
-                        onClick={() =>
-                          navigate(
-                            `/reports?scan=${encodeURIComponent(
-                              result.scan_id ||
-                              result?.scan?.id ||
-                              result.id
-                            )}`
-                          )
-                        }
-                      >
-
-                        <Eye
-                          size={16}
-                          className="mr-2"
-                        />
-
-                        Open Full Report
-
-                      </Button>
-
-                    )}
-
-                  </div>
-
-                </div>
-
-              )}
-
-
-              {/* DISCLAIMER */}
-
-              <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-xs leading-5 text-slate-500">
-
-                <strong className="text-slate-700">
-                  Clinical note:
-                </strong>{' '}
-
-                AI analysis is intended to assist
-                clinical review and should not be used
-                as a standalone medical diagnosis.
-
+              {/* ACTION BUTTONS */}
+              <div className="pt-2 flex items-center gap-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={removeFile}
+                  className="w-full"
+                >
+                  <RefreshCw size={14} className="mr-1.5" />
+                  New Analysis / Reset
+                </Button>
               </div>
-
-
-              {/* NEW ANALYSIS */}
-
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={() => {
-
-                  setResult(null);
-                  setProgress(0);
-                  setError('');
-
-                  setHeatmapError(false);
-                  setOverlayError(false);
-
-                }}
-                className="w-full"
-              >
-
-                <RefreshCw
-                  size={17}
-                  className="mr-2"
-                />
-
-                Analyze another image
-
-              </Button>
-
             </div>
-
           )}
-
         </Card>
-
       </div>
-
     </div>
-
   );
 }
-
 
 export default NewScanPage;

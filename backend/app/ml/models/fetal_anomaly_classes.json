@@ -1,0 +1,12 @@
+{
+  "classes": [
+    "benign",
+    "malignant",
+    "normal"
+  ],
+  "class_to_idx": {
+    "benign": 0,
+    "malignant": 1,
+    "normal": 2
+  }
+}

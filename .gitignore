@@ -1,47 +1,97 @@
-# Python
+# =============================================================================
+# FETALAI REPOSITORY GITIGNORE
+# =============================================================================
+
+# Python Bytecode & Artifacts
 __pycache__/
 *.py[cod]
 *.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+coverage/
+htmlcov/
+nosetests.xml
+coverage.xml
+*.cover
 
-# Virtual environments
+# Virtual Environments
 .venv/
+.venv*/
 venv/
 env/
+ENV/
 
-# Environment / secrets
+# Environment Variables & Secrets (CRITICAL)
 .env
 .env.*
+.env.local
+.env.production
+.env.staging
 !.env.example
+backend/.env
+backend/.env.*
+!backend/.env.example
 
-# Database
+# Database & Persistent Data Dumps
 *.sqlite3
 *.db
+*.sql
+*.dump
+postgres_data/
 
-# IDE
+# IDE & OS Metadata
 .vscode/
 .idea/
-
-# Frontend
-node_modules/
-dist/
-
-# Backend runtime storage
-backend/storage/
-backend/storage/**
-
-# Logs
-*.log
-
-# OS
 .DS_Store
 Thumbs.db
+*.swp
+*.swo
 
-# ML dataset
+# Frontend Builds & Dependencies
+frontend/node_modules/
+node_modules/
+frontend/dist/
+dist/
+build/
+.next/
+out/
+
+# Storage & Runtime Uploads (No patient data in Git)
+backend/storage/
+backend/storage/**
+storage/
+storage/**
+!backend/storage/.gitkeep
+!backend/app/ml/models/
+
+# Application Logs & Diagnostics
+*.log
+logs/
+backend/storage/worker_logs/
+*.log.*
+
+# Heavy ML Datasets & External Raw Annotations
 Images/
+Datasets/
+FOCUS-dataset/
+backend/app/ml/heart_data/
+backend/app/ml/heart_predictions/
+backend/FETAL_PLANES_DB_data.csv
+backend/runs/
 
-# Development backups
+# Development Backups, Bundles & Temporary Scratch Work
+.git_backup*/
 *.backup.jsx
 *.backup.js
-
-# Development backup files
 *backup.jsx
+*.backup_worker_migration
+*.tmp
+scratch/
+tmp/
+*.tar.gz
+*.zip
+*.bundle
+scratch_test_report.pdf

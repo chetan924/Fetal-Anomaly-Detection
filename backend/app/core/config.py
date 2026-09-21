@@ -78,7 +78,7 @@ if not 1 <= API_PORT <= 65535:
 
 
 # =========================================================
-# FRONTEND
+# FRONTEND & CORS
 # =========================================================
 
 FRONTEND_URL = os.getenv(
@@ -91,6 +91,57 @@ if not FRONTEND_URL:
     raise RuntimeError(
         "FRONTEND_URL must not be empty."
     )
+
+FRONTEND_ORIGINS_RAW = os.getenv(
+    "FRONTEND_ORIGINS",
+    "",
+).strip()
+
+ADDITIONAL_FRONTEND_ORIGINS = [
+    origin.strip().rstrip("/")
+    for origin in FRONTEND_ORIGINS_RAW.split(",")
+    if origin.strip()
+]
+
+
+# =========================================================
+# WORKER & INFERENCE TIMEOUTS
+# =========================================================
+
+try:
+    INFERENCE_TIMEOUT_SECONDS = float(
+        os.getenv("INFERENCE_TIMEOUT_SECONDS", "60")
+    )
+except ValueError as exc:
+    raise RuntimeError("INFERENCE_TIMEOUT_SECONDS must be a valid float.") from exc
+
+try:
+    WORKER_STARTUP_TIMEOUT_SECONDS = float(
+        os.getenv("WORKER_STARTUP_TIMEOUT_SECONDS", "60")
+    )
+except ValueError as exc:
+    raise RuntimeError("WORKER_STARTUP_TIMEOUT_SECONDS must be a valid float.") from exc
+
+try:
+    WORKER_HEALTH_TIMEOUT_SECONDS = float(
+        os.getenv("WORKER_HEALTH_TIMEOUT_SECONDS", "5")
+    )
+except ValueError as exc:
+    raise RuntimeError("WORKER_HEALTH_TIMEOUT_SECONDS must be a valid float.") from exc
+
+try:
+    WORKER_MAX_RETRIES = int(
+        os.getenv("WORKER_MAX_RETRIES", "1")
+    )
+except ValueError as exc:
+    raise RuntimeError("WORKER_MAX_RETRIES must be a valid integer.") from exc
+
+try:
+    MAX_UPLOAD_SIZE_BYTES = int(
+        os.getenv("MAX_UPLOAD_SIZE_BYTES", str(15 * 1024 * 1024))
+    )
+except ValueError as exc:
+    raise RuntimeError("MAX_UPLOAD_SIZE_BYTES must be a valid integer.") from exc
 
 
 # =========================================================
@@ -159,6 +210,34 @@ if not 1 <= _postgres_port <= 65535:
     raise RuntimeError(
         "POSTGRES_PORT must be between 1 and 65535."
     )
+
+# =========================================================
+# DATABASE CONNECTION POOL
+# =========================================================
+
+try:
+    DB_POOL_SIZE = int(os.getenv("DB_POOL_SIZE", "5"))
+except ValueError as exc:
+    raise RuntimeError("DB_POOL_SIZE must be a valid integer.") from exc
+
+try:
+    DB_MAX_OVERFLOW = int(os.getenv("DB_MAX_OVERFLOW", "10"))
+except ValueError as exc:
+    raise RuntimeError("DB_MAX_OVERFLOW must be a valid integer.") from exc
+
+try:
+    DB_POOL_TIMEOUT = int(os.getenv("DB_POOL_TIMEOUT", "30"))
+except ValueError as exc:
+    raise RuntimeError("DB_POOL_TIMEOUT must be a valid integer.") from exc
+
+try:
+    DB_POOL_RECYCLE = int(os.getenv("DB_POOL_RECYCLE", "1800"))
+except ValueError as exc:
+    raise RuntimeError("DB_POOL_RECYCLE must be a valid integer.") from exc
+
+DB_POOL_PRE_PING = os.getenv("DB_POOL_PRE_PING", "true").strip().lower() in {
+    "1", "true", "yes", "on"
+}
 
 
 # =========================================================
@@ -272,6 +351,89 @@ if not EMAIL_FROM_NAME:
 
 
 
+
+
+# =========================================================
+# RATE LIMITING
+# =========================================================
+
+RATE_LIMIT_ENABLED = os.getenv(
+    "RATE_LIMIT_ENABLED",
+    "true",
+).strip().lower() in {
+    "1",
+    "true",
+    "yes",
+    "on",
+}
+
+try:
+    RATE_LIMIT_AUTH_PER_MINUTE = int(
+        os.getenv("RATE_LIMIT_AUTH_PER_MINUTE", "10")
+    )
+except ValueError as exc:
+    raise RuntimeError("RATE_LIMIT_AUTH_PER_MINUTE must be a valid integer.") from exc
+
+try:
+    RATE_LIMIT_INFERENCE_PER_MINUTE = int(
+        os.getenv("RATE_LIMIT_INFERENCE_PER_MINUTE", "20")
+    )
+except ValueError as exc:
+    raise RuntimeError("RATE_LIMIT_INFERENCE_PER_MINUTE must be a valid integer.") from exc
+
+try:
+    RATE_LIMIT_DEFAULT_PER_MINUTE = int(
+        os.getenv("RATE_LIMIT_DEFAULT_PER_MINUTE", "60")
+    )
+except ValueError as exc:
+    raise RuntimeError("RATE_LIMIT_DEFAULT_PER_MINUTE must be a valid integer.") from exc
+
+
+# =========================================================
+# SECURITY HEADERS
+# =========================================================
+
+SECURITY_HEADERS_ENABLED = os.getenv(
+    "SECURITY_HEADERS_ENABLED",
+    "true",
+).strip().lower() in {
+    "1",
+    "true",
+    "yes",
+    "on",
+}
+
+HSTS_ENABLED = os.getenv(
+    "HSTS_ENABLED",
+    "true" if ENVIRONMENT == "production" else "false",
+).strip().lower() in {
+    "1",
+    "true",
+    "yes",
+    "on",
+}
+
+# =========================================================
+# OBSERVABILITY & MONITORING CONFIG
+# =========================================================
+
+try:
+    SLOW_REQUEST_THRESHOLD_MS = float(
+        os.getenv("SLOW_REQUEST_THRESHOLD_MS", "2000")
+    )
+except ValueError as exc:
+    raise RuntimeError("SLOW_REQUEST_THRESHOLD_MS must be a valid float.") from exc
+
+try:
+    HIGH_MEMORY_THRESHOLD_MB = float(
+        os.getenv("HIGH_MEMORY_THRESHOLD_MB", "400.0")
+    )
+except ValueError as exc:
+    raise RuntimeError("HIGH_MEMORY_THRESHOLD_MB must be a valid float.") from exc
+
+METRICS_ENABLED = os.getenv("METRICS_ENABLED", "true").strip().lower() in {
+    "1", "true", "yes", "on"
+}
 
 # =========================================================
 # PRODUCTION SECURITY VALIDATION

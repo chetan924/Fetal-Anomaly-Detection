@@ -15,8 +15,7 @@ from sqlalchemy.orm import Session
 
 from app.api.dependencies import get_current_user
 from app.db.database import get_db
-from app.ml.predict_plane import predict_plane
-from app.ml.fetal_analysis_pipeline import analyze_fetal_ultrasound
+from app.inference.worker_client import worker_client
 from app.models.patient import Patient
 from app.models.scan import Scan
 from app.models.user import User
@@ -82,13 +81,27 @@ def _get_patient(
 
 async def _read_uploaded_image(
     file: UploadFile,
-) -> Image.Image:
+):
+    """
+    Read and validate uploaded image.
+
+    Returns:
+        image      -> PIL RGB image
+        raw_bytes  -> original uploaded bytes
+    """
 
     # --------------------------------------------------------
     # CONTENT TYPE
     # --------------------------------------------------------
 
-    if file.content_type not in ALLOWED_CONTENT_TYPES:
+    content_type = (
+        (file.content_type or "")
+        .split(";")[0]
+        .strip()
+        .lower()
+    )
+
+    if content_type not in ALLOWED_CONTENT_TYPES:
 
         raise HTTPException(
             status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
@@ -139,7 +152,68 @@ async def _read_uploaded_image(
             detail="Invalid image file",
         ) from exc
 
-    return image
+    return image, contents
+
+
+# ============================================================
+# HELPER: CALL PLANE WORKER
+# ============================================================
+
+async def _run_plane_worker(
+    file: UploadFile,
+    contents: bytes,
+):
+    """
+    Send image to isolated Plane Worker.
+
+    Main FastAPI does not load the plane ML model.
+    """
+
+    try:
+
+        result = await worker_client.predict(
+            model_name="plane",
+            filename=file.filename or "image.png",
+            content=contents,
+            content_type=(
+                file.content_type
+                or "image/png"
+            ),
+        )
+
+    except Exception as exc:
+
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=f"Plane worker unavailable: {exc}",
+        ) from exc
+
+    # --------------------------------------------------------
+    # Worker response validation
+    # --------------------------------------------------------
+
+    if not isinstance(result, dict):
+
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="Plane worker returned an invalid response",
+        )
+
+    worker_result = result.get(
+        "result"
+    )
+
+    if not isinstance(
+        worker_result,
+        dict,
+    ):
+
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="Plane worker returned an invalid prediction",
+        )
+
+    return worker_result
 
 
 # ============================================================
@@ -167,47 +241,28 @@ async def predict_fetal_plane(
     # READ IMAGE
     # ========================================================
 
-    image = await _read_uploaded_image(
-        file
+    image, contents = (
+        await _read_uploaded_image(
+            file
+        )
     )
+
+    # Avoid unused-variable warnings while
+    # still validating the image.
+    _ = image
 
     # ========================================================
     # AI PREDICTION
     # ========================================================
 
-    try:
-
-        result = predict_plane(
-            image
-        )
-
-    except FileNotFoundError as exc:
-
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=str(exc),
-        ) from exc
-
-    except Exception as exc:
-
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"AI prediction failed: {str(exc)}",
-        ) from exc
+    result = await _run_plane_worker(
+        file,
+        contents,
+    )
 
     # ========================================================
     # VALIDATE AI RESULT
     # ========================================================
-
-    if not isinstance(
-        result,
-        dict,
-    ):
-
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="AI model returned an invalid result",
-        )
 
     predicted_class = result.get(
         "predicted_class"
@@ -225,20 +280,39 @@ async def predict_fetal_plane(
     if predicted_class is None:
 
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            status_code=status.HTTP_502_BAD_GATEWAY,
             detail="AI model did not return a predicted class",
         )
 
     if confidence is None:
 
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            status_code=status.HTTP_502_BAD_GATEWAY,
             detail="AI model did not return confidence",
         )
 
-    confidence = float(
-        confidence
-    )
+    try:
+
+        confidence = float(
+            confidence
+        )
+
+    except (
+        TypeError,
+        ValueError,
+    ) as exc:
+
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="AI model returned invalid confidence",
+        ) from exc
+
+    if not 0.0 <= confidence <= 1.0:
+
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="AI model returned invalid confidence range",
+        )
 
     # ========================================================
     # SAVE BASIC SCAN RESULT
@@ -250,8 +324,6 @@ async def predict_fetal_plane(
         image_filename=file.filename or "unknown",
         predicted_plane=predicted_class,
         confidence=confidence,
-
-        # Store the prediction result as JSON.
         analysis_result={
             "fetal_plane": {
                 "predicted_class": predicted_class,
@@ -261,6 +333,10 @@ async def predict_fetal_plane(
                     2,
                 ),
                 "probabilities": probabilities,
+            },
+            "architecture": {
+                "mode": "worker_based",
+                "plane_worker": "http://127.0.0.1:8100",
             },
         },
     )
@@ -294,26 +370,17 @@ async def predict_fetal_plane(
     # ========================================================
 
     return {
-
         "scan_id": scan.id,
-
         "patient_id": patient.patient_id,
-
         "patient_name": patient.full_name,
-
         "filename": file.filename,
-
         "predicted_class": predicted_class,
-
         "confidence": confidence,
-
         "confidence_percent": round(
             confidence * 100,
             2,
         ),
-
         "probabilities": probabilities,
-
         "created_at": scan.created_at,
     }
 
@@ -343,68 +410,22 @@ async def analyze_fetal_ultrasound_api(
     # READ IMAGE
     # ========================================================
 
-    image = await _read_uploaded_image(
-        file
+    image, contents = (
+        await _read_uploaded_image(
+            file
+        )
     )
 
-    # ========================================================
-    # COMPLETE AI PIPELINE
-    # ========================================================
-
-    try:
-
-        result = analyze_fetal_ultrasound(
-            image
-        )
-
-    except FileNotFoundError as exc:
-
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=str(exc),
-        ) from exc
-
-    except Exception as exc:
-
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Fetal analysis failed: {str(exc)}",
-        ) from exc
+    _ = image
 
     # ========================================================
-    # VALIDATE PIPELINE RESULT
+    # PLANE WORKER ANALYSIS
     # ========================================================
 
-    if not isinstance(
-        result,
-        dict,
-    ):
-
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="AI pipeline returned an invalid result",
-        )
-
-    # ========================================================
-    # FETAL PLANE
-    # ========================================================
-
-    fetal_plane = result.get(
-        "fetal_plane"
+    fetal_plane = await _run_plane_worker(
+        file,
+        contents,
     )
-
-    if not isinstance(
-        fetal_plane,
-        dict,
-    ):
-
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=(
-                "AI pipeline result does not contain "
-                "valid fetal-plane analysis"
-            ),
-        )
 
     predicted_class = fetal_plane.get(
         "predicted_class"
@@ -414,12 +435,17 @@ async def analyze_fetal_ultrasound_api(
         "confidence"
     )
 
+    probabilities = fetal_plane.get(
+        "probabilities",
+        [],
+    )
+
     if predicted_class is None:
 
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            status_code=status.HTTP_502_BAD_GATEWAY,
             detail=(
-                "AI pipeline did not return "
+                "Plane worker did not return "
                 "a fetal-plane prediction"
             ),
         )
@@ -427,53 +453,100 @@ async def analyze_fetal_ultrasound_api(
     if confidence is None:
 
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            status_code=status.HTTP_502_BAD_GATEWAY,
             detail=(
-                "AI pipeline did not return "
+                "Plane worker did not return "
                 "a fetal-plane confidence"
             ),
         )
 
-    confidence = float(
-        confidence
-    )
+    try:
+
+        confidence = float(
+            confidence
+        )
+
+    except (
+        TypeError,
+        ValueError,
+    ) as exc:
+
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="Invalid fetal-plane confidence",
+        ) from exc
 
     # ========================================================
-    # COMPLETE AI RESULT
+    # MULTI-MODEL RESULT
     # ========================================================
     #
-    # Store the complete pipeline result.
+    # Brain workers are intentionally not called yet.
+    # They will be added through the worker architecture.
     #
-    # This contains:
-    #
-    # - fetal_plane
-    # - brain_analysis_performed
-    # - brain_plane
-    # - outlier_analysis
-    # - gradcam
-    # - pipeline_status
-    # - message
-    #
+    # ========================================================
+
+    result = {
+
+        "fetal_plane": {
+            "predicted_class": predicted_class,
+            "confidence": confidence,
+            "confidence_percent": round(
+                confidence * 100,
+                2,
+            ),
+            "probabilities": probabilities,
+        },
+
+        "brain_analysis_performed": False,
+
+        "brain_plane": None,
+
+        "outlier_analysis": None,
+
+        "gradcam": {
+            "available": False,
+            "status": "not_available_in_worker_migration",
+        },
+
+        "pipeline_status": (
+            "Plane analysis completed"
+        ),
+
+        "message": (
+            "Fetal plane analysis completed "
+            "through the isolated Plane Worker. "
+            "Brain-specific workers are not connected yet."
+        ),
+
+        "architecture": {
+            "type": "multi_model_worker",
+            "plane_worker": {
+                "enabled": True,
+                "url": "http://127.0.0.1:8100",
+            },
+            "spine_worker": {
+                "enabled": True,
+                "url": "http://127.0.0.1:8101",
+            },
+            "brain_worker": {
+                "enabled": False,
+                "url": "http://127.0.0.1:8102",
+            },
+        },
+    }
+
+    # ========================================================
+    # SAVE SCAN
     # ========================================================
 
     scan = Scan(
-
         patient_id=patient.id,
-
         uploaded_by=current_user.id,
-
         image_filename=file.filename or "unknown",
-
         predicted_plane=predicted_class,
-
         confidence=confidence,
-
         analysis_result=result,
     )
-
-    # ========================================================
-    # DATABASE SAVE
-    # ========================================================
 
     try:
 
@@ -500,24 +573,16 @@ async def analyze_fetal_ultrasound_api(
     # ========================================================
 
     return {
-
         "scan_id": scan.id,
 
         "patient": {
-
-            "patient_id":
-                patient.patient_id,
-
-            "patient_name":
-                patient.full_name,
+            "patient_id": patient.patient_id,
+            "patient_name": patient.full_name,
         },
 
-        "filename":
-            file.filename,
+        "filename": file.filename,
 
-        "analysis":
-            result,
+        "analysis": result,
 
-        "created_at":
-            scan.created_at,
+        "created_at": scan.created_at,
     }

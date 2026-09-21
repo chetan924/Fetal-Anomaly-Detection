@@ -121,78 +121,72 @@ api.interceptors.response.use(
 // ERROR MESSAGE HELPER
 // ============================================================
 
+export const ERROR_CODE_MESSAGES = {
+  VALIDATION_ERROR: 'Please select a valid scan.',
+  FILE_TOO_LARGE: 'The selected file exceeds the 15 MB size limit.',
+  UNSUPPORTED_FILE_TYPE: 'This file format is not supported.',
+  INVALID_IMAGE: 'The uploaded image appears to be invalid or corrupted.',
+  INVALID_VTK: 'The VTK 3D mesh appears to be invalid or corrupted.',
+  WORKER_DISABLED: 'This analysis model is currently disabled (model unavailable).',
+  WORKER_STARTUP_FAILED: 'The AI analysis worker failed to start. Please try again.',
+  WORKER_UNAVAILABLE: 'The AI analysis service is temporarily unavailable.',
+  INFERENCE_TIMEOUT: 'The analysis took too long. Please try again.',
+  WORKER_TIMEOUT: 'The analysis took too long. Please try again.',
+  INFERENCE_FAILED: 'The scan could not be analyzed.',
+  INTERNAL_ERROR: 'Something went wrong on the server. Please try again.',
+};
+
 export const getApiErrorMessage = (
   error,
   fallback = 'Something went wrong. Please try again.'
 ) => {
+  /*
+   * Standardized FetalAI Error Envelope:
+   *
+   * {
+   *   "success": false,
+   *   "model": "plane",
+   *   "error": {
+   *     "code": "WORKER_UNAVAILABLE",
+   *     "message": "..."
+   *   }
+   * }
+   */
+  const structuredError = error?.response?.data?.error;
+  if (structuredError) {
+    if (typeof structuredError.message === 'string' && structuredError.message.trim()) {
+      return structuredError.message.trim();
+    }
+    if (structuredError.code && ERROR_CODE_MESSAGES[structuredError.code]) {
+      return ERROR_CODE_MESSAGES[structuredError.code];
+    }
+  }
+
   const detail =
     error?.response?.data?.detail;
-
-
-  /*
-   * FastAPI validation error:
-   *
-   * detail: [
-   *   {
-   *     type: "...",
-   *     loc: [...],
-   *     msg: "..."
-   *   }
-   * ]
-   */
 
   if (Array.isArray(detail)) {
     return detail
       .map((item) => {
-        if (
-          typeof item === 'string'
-        ) {
+        if (typeof item === 'string') {
           return item;
         }
-
-        return (
-          item?.msg ||
-          'Invalid request.'
-        );
+        return item?.msg || 'Invalid request.';
       })
       .join(', ');
   }
 
-
-  /*
-   * Normal FastAPI detail string.
-   */
-
-  if (
-    typeof detail === 'string'
-  ) {
+  if (typeof detail === 'string') {
     return detail;
   }
 
-
-  /*
-   * Custom API message.
-   */
-
-  if (
-    typeof error?.response?.data?.message ===
-    'string'
-  ) {
+  if (typeof error?.response?.data?.message === 'string') {
     return error.response.data.message;
   }
 
-
-  /*
-   * Axios error message.
-   */
-
-  if (
-    typeof error?.message ===
-    'string'
-  ) {
+  if (typeof error?.message === 'string') {
     return error.message;
   }
-
 
   return fallback;
 };
@@ -788,6 +782,190 @@ export const getScan =
 
     return response.data;
   };
+
+
+// ============================================================
+// MULTI-MODEL INFERENCE API (GATEWAY PORT 8000)
+// ============================================================
+
+const _postInference = async (modelName, file, onUploadProgress) => {
+  const formData = new FormData();
+  formData.append('file', file);
+
+  const response = await api.post(
+    `/api/v1/inference/${encodeURIComponent(modelName)}`,
+    formData,
+    {
+      onUploadProgress,
+      timeout: 180000,
+    }
+  );
+
+  return response.data;
+};
+
+export const predictPlane = async (file, onUploadProgress) => {
+  return _postInference('plane', file, onUploadProgress);
+};
+
+export const predictSpine = async (file, onUploadProgress) => {
+  return _postInference('spine', file, onUploadProgress);
+};
+
+export const predictBrain = async (file, onUploadProgress) => {
+  return _postInference('brain', file, onUploadProgress);
+};
+
+export const predictLung = async (file, onUploadProgress) => {
+  return _postInference('lung', file, onUploadProgress);
+};
+
+export const predictBone = async (file, onUploadProgress) => {
+  return _postInference('bone', file, onUploadProgress);
+};
+
+export const predictPlacenta = async (file, onUploadProgress) => {
+  return _postInference('placenta', file, onUploadProgress);
+};
+
+export const predictFace = async (file, onUploadProgress) => {
+  return _postInference('face', file, onUploadProgress);
+};
+
+export const predictHeart = async (file, onUploadProgress) => {
+  return _postInference('heart', file, onUploadProgress);
+};
+
+export const predictComprehensive = async (
+  scanSlots = {},
+  patientId = null,
+  idempotencyKey = null,
+  sessionId = null,
+  onUploadProgress = null
+) => {
+  // Support flexible argument positions if progress callback is passed as 3rd arg
+  let cb = onUploadProgress;
+  let idem = idempotencyKey;
+  let sid = sessionId;
+
+  if (typeof idempotencyKey === 'function') {
+    cb = idempotencyKey;
+    idem = null;
+    sid = null;
+  }
+
+  const formData = new FormData();
+  
+  if (scanSlots.plane) formData.append('plane_scan', scanSlots.plane);
+  if (scanSlots.spine) formData.append('spine_scan', scanSlots.spine);
+  if (scanSlots.brain) formData.append('brain_scan', scanSlots.brain);
+  if (scanSlots.lung) formData.append('lung_scan', scanSlots.lung);
+  if (scanSlots.bone) formData.append('bone_scan', scanSlots.bone);
+  if (scanSlots.placenta) formData.append('placenta_scan', scanSlots.placenta);
+  if (scanSlots.face) formData.append('face_mesh', scanSlots.face);
+  if (scanSlots.heart) formData.append('heart_scan', scanSlots.heart);
+  
+  if (patientId) {
+    formData.append('patient_id', String(patientId));
+  }
+  if (idem) {
+    formData.append('idempotency_key', String(idem));
+  }
+  if (sid) {
+    formData.append('session_id', String(sid));
+  }
+
+  const response = await api.post(
+    '/api/v1/inference/comprehensive',
+    formData,
+    {
+      onUploadProgress: cb,
+      timeout: 240000,
+    }
+  );
+
+  return response.data;
+};
+
+export const getWorkerStatus = async () => {
+  const response = await api.get('/api/v1/inference/workers/status');
+  return response.data;
+};
+
+export const stopWorker = async (modelName) => {
+  const response = await api.post(`/api/v1/inference/workers/${encodeURIComponent(modelName)}/stop`);
+  return response.data;
+};
+
+
+// ============================================================
+// ANALYSIS SESSIONS API
+// ============================================================
+
+export const createAnalysisSession = async (payload) => {
+  const response = await api.post('/api/v1/analysis/sessions', payload);
+  return response.data?.data || response.data;
+};
+
+export const getAnalysisSessions = async (params = {}) => {
+  const response = await api.get('/api/v1/analysis/sessions', { params });
+  return response.data?.data || response.data;
+};
+
+export const getAnalysisSession = async (sessionId) => {
+  const response = await api.get(`/api/v1/analysis/sessions/${encodeURIComponent(sessionId)}`);
+  return response.data?.data || response.data;
+};
+
+export const retryAnalysisSession = async (sessionId) => {
+  const response = await api.post(`/api/v1/analysis/sessions/${encodeURIComponent(sessionId)}/retry`);
+  return response.data?.data || response.data;
+};
+
+
+// ============================================================
+// REPORTS & PDF EXPORT API
+// ============================================================
+
+export const getReports = async (params = {}) => {
+  const response = await api.get('/api/v1/reports', { params });
+  return response.data?.data || response.data;
+};
+
+export const getReport = async (reportIdOrNumber) => {
+  const response = await api.get(`/api/v1/reports/${encodeURIComponent(reportIdOrNumber)}`);
+  return response.data?.data || response.data;
+};
+
+export const getReportPdfBlob = async (reportIdOrNumber) => {
+  const response = await api.get(`/api/v1/reports/${encodeURIComponent(reportIdOrNumber)}/pdf`, {
+    responseType: 'blob',
+    timeout: 60000,
+  });
+  return response.data;
+};
+
+export const downloadReportPdf = async (reportIdOrNumber, filename = null) => {
+  const blob = await getReportPdfBlob(reportIdOrNumber);
+  const blobUrl = window.URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = blobUrl;
+  link.download = filename || `${reportIdOrNumber}.pdf`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  window.URL.revokeObjectURL(blobUrl);
+};
+
+export const archiveReport = async (reportIdOrNumber) => {
+  const response = await api.post(`/api/v1/reports/${encodeURIComponent(reportIdOrNumber)}/archive`);
+  return response.data;
+};
+
+export const createReport = async (reportData) => {
+  const response = await api.post('/api/v1/reports', reportData);
+  return response.data;
+};
 
 
 // ============================================================

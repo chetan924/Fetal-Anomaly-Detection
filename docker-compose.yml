@@ -1,37 +1,255 @@
-version: "3.9"
-services:
-  postgres:
-    image: postgres:16-alpine
-    environment:
-      POSTGRES_DB: ${POSTGRES_DB:-fetalai}
-      POSTGRES_USER: ${POSTGRES_USER:-fetalai}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-fetalai}
-    ports:
-      - "55432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-fetalai}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+# =============================================================================
+# FETALAI v1.0 — PRODUCTION DOCKER COMPOSE ORCHESTRATION
+# =============================================================================
+# Architecture:
+# - Gateway (:8000) — ML-Free Gateway & API Routing (Externally Published)
+# - 8 Independent ML Workers (:8100-:8108) — Internal Docker Network Only
+# - Kidney (:8109) — DISABLED INVARIANT (No operational container)
+# =============================================================================
 
-  backend:
+services:
+  # ===========================================================================
+  # 1. API GATEWAY (ML-Free, Memory < 150MB RSS)
+  # ===========================================================================
+  gateway:
     build:
       context: ./backend
-    env_file:
-      - .env
-    environment:
-      POSTGRES_HOST: postgres
-    depends_on:
-      postgres:
-        condition: service_healthy
+      dockerfile: Dockerfile
+      target: gateway
+    container_name: fetalai-gateway
+    restart: unless-stopped
     ports:
-      - "8001:8000"
+      - "${PORT:-8000}:8000"
+    environment:
+      - ENVIRONMENT=${ENVIRONMENT:-production}
+      - API_HOST=0.0.0.0
+      - API_PORT=8000
+      - DATABASE_URL=${DATABASE_URL:-postgresql://neondb_owner:npg_PdL23IHFbBmp@ep-jolly-brook-aybehc6i-pooler.c-5.us-east-2.aws.neon.tech:5432/neondb?sslmode=require}
+      - POSTGRES_HOST=${POSTGRES_HOST:-ep-jolly-brook-aybehc6i-pooler.c-5.us-east-2.aws.neon.tech}
+      - POSTGRES_PORT=${POSTGRES_PORT:-5432}
+      - POSTGRES_DB=${POSTGRES_DB:-neondb}
+      - POSTGRES_USER=${POSTGRES_USER:-neondb_owner}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-npg_PdL23IHFbBmp}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY:-xTwO2qAAJtectxuY3ysOUhM4eCaXPcf3eAc-YANDixyiqjW8IBu_EU7oTYh8CqXi}
+      - JWT_ALGORITHM=${JWT_ALGORITHM:-HS256}
+      - ACCESS_TOKEN_EXPIRE_MINUTES=${ACCESS_TOKEN_EXPIRE_MINUTES:-30}
+      - FRONTEND_URL=${FRONTEND_URL:-https://fetal-anomaly-detection.onrender.com}
+      - FRONTEND_ORIGINS=${FRONTEND_ORIGINS:-https://fetalai-frontend.onrender.com}
+      - BREVO_API_KEY=${BREVO_API_KEY}
+      - EMAIL_FROM_ADDRESS=${EMAIL_FROM_ADDRESS:-chaudharichetan264@gmail.com}
+      - EMAIL_FROM_NAME=${EMAIL_FROM_NAME:-FetalAI Clinical AI Platform}
+      - WORKER_PLANE_URL=http://plane-worker:8100
+      - WORKER_SPINE_URL=http://spine-worker:8101
+      - WORKER_BRAIN_URL=http://brain-worker:8102
+      - WORKER_LUNG_URL=http://lung-worker:8103
+      - WORKER_BONE_URL=http://bone-worker:8105
+      - WORKER_PLACENTA_URL=http://placenta-worker:8106
+      - WORKER_FACE_URL=http://face-worker:8107
+      - WORKER_HEART_URL=http://heart-worker:8108
+      - WORKER_AUTO_START=false
+      - WORKER_IDLE_TIMEOUT_SECONDS=${WORKER_IDLE_TIMEOUT_SECONDS:-300}
+      - WORKER_STARTUP_TIMEOUT_SECONDS=${WORKER_STARTUP_TIMEOUT_SECONDS:-60}
+      - RATE_LIMIT_ENABLED=${RATE_LIMIT_ENABLED:-true}
+      - METRICS_ENABLED=${METRICS_ENABLED:-true}
+      - SECURITY_HEADERS_ENABLED=true
     volumes:
-      - ./backend:/app
+      - fetalai_storage:/app/storage
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    depends_on:
+      - plane-worker
+      - spine-worker
+      - brain-worker
+      - lung-worker
+      - bone-worker
+      - placenta-worker
+      - face-worker
+      - heart-worker
+    networks:
+      - fetalai_network
 
+  # ===========================================================================
+  # 2. PLANE WORKER (:8100)
+  # ===========================================================================
+  plane-worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: worker-pytorch
+    container_name: fetalai-worker-plane
+    restart: unless-stopped
+    environment:
+      - PORT=8100
+    command: ["uvicorn", "app.workers.plane.worker:app", "--host", "0.0.0.0", "--port", "8100", "--workers", "1"]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8100/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+    networks:
+      - fetalai_network
+
+  # ===========================================================================
+  # 3. SPINE WORKER (:8101)
+  # ===========================================================================
+  spine-worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: worker-yolo
+    container_name: fetalai-worker-spine
+    restart: unless-stopped
+    environment:
+      - PORT=8101
+    command: ["uvicorn", "app.workers.spine.worker:app", "--host", "0.0.0.0", "--port", "8101", "--workers", "1"]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8101/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+    networks:
+      - fetalai_network
+
+  # ===========================================================================
+  # 4. BRAIN WORKER (:8102)
+  # ===========================================================================
+  brain-worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: worker-pytorch
+    container_name: fetalai-worker-brain
+    restart: unless-stopped
+    environment:
+      - PORT=8102
+    command: ["uvicorn", "app.workers.brain.worker:app", "--host", "0.0.0.0", "--port", "8102", "--workers", "1"]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8102/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+    networks:
+      - fetalai_network
+
+  # ===========================================================================
+  # 5. LUNG WORKER (:8103)
+  # ===========================================================================
+  lung-worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: worker-pytorch
+    container_name: fetalai-worker-lung
+    restart: unless-stopped
+    environment:
+      - PORT=8103
+    command: ["uvicorn", "app.workers.lung.worker:app", "--host", "0.0.0.0", "--port", "8103", "--workers", "1"]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8103/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+    networks:
+      - fetalai_network
+
+  # ===========================================================================
+  # 6. BONE WORKER (:8105)
+  # ===========================================================================
+  bone-worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: worker-yolo
+    container_name: fetalai-worker-bone
+    restart: unless-stopped
+    environment:
+      - PORT=8105
+    command: ["uvicorn", "app.workers.bone.worker:app", "--host", "0.0.0.0", "--port", "8105", "--workers", "1"]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8105/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+    networks:
+      - fetalai_network
+
+  # ===========================================================================
+  # 7. PLACENTA WORKER (:8106)
+  # ===========================================================================
+  placenta-worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: worker-pytorch
+    container_name: fetalai-worker-placenta
+    restart: unless-stopped
+    environment:
+      - PORT=8106
+    command: ["uvicorn", "app.workers.placenta.worker:app", "--host", "0.0.0.0", "--port", "8106", "--workers", "1"]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8106/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+    networks:
+      - fetalai_network
+
+  # ===========================================================================
+  # 8. FACE 3D / VTK WORKER (:8107)
+  # ===========================================================================
+  face-worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: worker-face
+    container_name: fetalai-worker-face
+    restart: unless-stopped
+    environment:
+      - PORT=8107
+      - FACE_MODEL_PATH=/app/app/ml/models/fetal_face_3d_classifier.joblib
+      - FACE_FEATURES_PATH=/app/app/ml/models/feature_columns.txt
+    command: ["uvicorn", "app.workers.face.worker:app", "--host", "0.0.0.0", "--port", "8107", "--workers", "1"]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8107/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+    networks:
+      - fetalai_network
+
+  # ===========================================================================
+  # 9. HEART WORKER (:8108)
+  # ===========================================================================
+  heart-worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: worker-pytorch
+    container_name: fetalai-worker-heart
+    restart: unless-stopped
+    environment:
+      - PORT=8108
+    command: ["uvicorn", "app.workers.heart.worker:app", "--host", "0.0.0.0", "--port", "8108", "--workers", "1"]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8108/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+    networks:
+      - fetalai_network
+
+# =============================================================================
+# VOLUMES & NETWORKS
+# =============================================================================
 volumes:
-  postgres_data:
+  fetalai_storage:
+    name: fetalai_storage_data
 
-
+networks:
+  fetalai_network:
+    name: fetalai_internal_net
+    driver: bridge

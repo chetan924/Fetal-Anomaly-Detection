@@ -2,12 +2,14 @@ from fastapi import (
     APIRouter,
     Depends,
     HTTPException,
+    Request,
     status,
 )
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.api.dependencies import get_current_user
+from app.core.audit_logger import security_audit
 from app.db.database import get_db
 from app.models.patient import Patient
 from app.models.user import User
@@ -39,6 +41,7 @@ router = APIRouter(
 )
 def create_patient(
     payload: PatientCreate,
+    request: Request,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
@@ -46,25 +49,11 @@ def create_patient(
     Create a patient for the currently authenticated user.
     """
 
-    # =====================================================
-    # VERIFY AUTHENTICATED USER
-    # =====================================================
-
-    if current_user is None:
+    if current_user is None or current_user.id is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Authentication required",
         )
-
-    if current_user.id is None:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Authenticated user ID is missing",
-        )
-
-    # =====================================================
-    # NORMALIZE PATIENT ID
-    # =====================================================
 
     normalized_patient_id = payload.patient_id.strip()
 
@@ -73,10 +62,6 @@ def create_patient(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Patient ID is required",
         )
-
-    # =====================================================
-    # CHECK GLOBAL PATIENT ID UNIQUENESS
-    # =====================================================
 
     existing_patient = db.scalar(
         select(Patient).where(
@@ -90,23 +75,9 @@ def create_patient(
             detail="A patient with this patient ID already exists",
         )
 
-    # =====================================================
-    # NORMALIZE TEXT FIELDS
-    # =====================================================
-
     full_name = payload.full_name.strip()
-
     gestational_age = payload.gestational_age.strip()
-
-    phone = (
-        payload.phone.strip()
-        if payload.phone
-        else None
-    )
-
-    # =====================================================
-    # VALIDATE REQUIRED FIELDS
-    # =====================================================
+    phone = payload.phone.strip() if payload.phone else None
 
     if not full_name:
         raise HTTPException(
@@ -120,17 +91,6 @@ def create_patient(
             detail="Gestational age is required",
         )
 
-    # =====================================================
-    # CREATE PATIENT
-    # =====================================================
-    #
-    # IMPORTANT:
-    # The owner is ALWAYS taken from the authenticated user.
-    #
-    # The frontend/client cannot choose created_by.
-    #
-    # =====================================================
-
     patient = Patient(
         patient_id=normalized_patient_id,
         full_name=full_name,
@@ -140,18 +100,22 @@ def create_patient(
         created_by=current_user.id,
     )
 
-    # =====================================================
-    # SAVE PATIENT
-    # =====================================================
-
     try:
         db.add(patient)
         db.commit()
         db.refresh(patient)
 
+        security_audit.log_resource_access(
+            event_type="PATIENT_CREATE",
+            user_id=current_user.id,
+            resource_type="patient",
+            resource_id=patient.patient_id,
+            request=request,
+            details={"full_name": patient.full_name},
+        )
+
     except Exception:
         db.rollback()
-
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to create patient",
@@ -169,6 +133,7 @@ def create_patient(
     response_model=list[PatientResponse],
 )
 def get_patients(
+    request: Request,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
@@ -192,6 +157,15 @@ def get_patients(
         )
     ).all()
 
+    security_audit.log_resource_access(
+        event_type="PATIENT_LIST",
+        user_id=current_user.id,
+        resource_type="patient",
+        resource_id="list",
+        request=request,
+        details={"count": len(patients)},
+    )
+
     return patients
 
 
@@ -205,6 +179,7 @@ def get_patients(
 )
 def get_patient(
     patient_id: str,
+    request: Request,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
@@ -218,10 +193,6 @@ def get_patient(
             detail="Authentication required",
         )
 
-    # =====================================================
-    # NORMALIZE PATIENT ID
-    # =====================================================
-
     normalized_patient_id = patient_id.strip()
 
     if not normalized_patient_id:
@@ -229,10 +200,6 @@ def get_patient(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Patient ID is required",
         )
-
-    # =====================================================
-    # FIND PATIENT OWNED BY CURRENT USER
-    # =====================================================
 
     patient = db.scalar(
         select(Patient).where(
@@ -242,10 +209,25 @@ def get_patient(
     )
 
     if patient is None:
+        security_audit.log_authz_denied(
+            user_id=current_user.id,
+            resource_type="patient",
+            resource_id=normalized_patient_id,
+            action="VIEW",
+            request=request,
+        )
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Patient not found",
         )
+
+    security_audit.log_resource_access(
+        event_type="PATIENT_VIEW",
+        user_id=current_user.id,
+        resource_type="patient",
+        resource_id=patient.patient_id,
+        request=request,
+    )
 
     return patient
 
@@ -261,6 +243,7 @@ def get_patient(
 def update_patient(
     patient_id: str,
     payload: PatientUpdate,
+    request: Request,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
@@ -274,10 +257,6 @@ def update_patient(
             detail="Authentication required",
         )
 
-    # =====================================================
-    # NORMALIZE PATIENT ID
-    # =====================================================
-
     normalized_patient_id = patient_id.strip()
 
     if not normalized_patient_id:
@@ -285,10 +264,6 @@ def update_patient(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Patient ID is required",
         )
-
-    # =====================================================
-    # FIND ONLY CURRENT USER'S PATIENT
-    # =====================================================
 
     patient = db.scalar(
         select(Patient).where(
@@ -298,27 +273,24 @@ def update_patient(
     )
 
     if patient is None:
+        security_audit.log_authz_denied(
+            user_id=current_user.id,
+            resource_type="patient",
+            resource_id=normalized_patient_id,
+            action="UPDATE",
+            request=request,
+        )
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Patient not found",
         )
 
-    # =====================================================
-    # EXTRACT UPDATE DATA
-    # =====================================================
-
     update_data = payload.model_dump(
         exclude_unset=True
     )
 
-    # =====================================================
-    # VALIDATE PATIENT ID CHANGE
-    # =====================================================
-
     if "patient_id" in update_data:
-
         new_patient_id = update_data["patient_id"]
-
         if isinstance(new_patient_id, str):
             new_patient_id = new_patient_id.strip()
 
@@ -330,12 +302,7 @@ def update_patient(
 
         update_data["patient_id"] = new_patient_id
 
-        # -------------------------------------------------
-        # Check global uniqueness
-        # -------------------------------------------------
-
         if new_patient_id != patient.patient_id:
-
             duplicate_patient = db.scalar(
                 select(Patient).where(
                     Patient.patient_id == new_patient_id
@@ -348,62 +315,38 @@ def update_patient(
                     detail="A patient with this patient ID already exists",
                 )
 
-    # =====================================================
-    # NORMALIZE STRING VALUES
-    # =====================================================
-
     for field, value in list(update_data.items()):
-
         if isinstance(value, str):
-
             value = value.strip()
-
             if not value:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
                     detail=f"{field} cannot be empty",
                 )
-
             update_data[field] = value
 
-    # =====================================================
-    # SECURITY
-    # =====================================================
-    #
-    # The client must NEVER be able to change ownership.
-    #
-    # =====================================================
-
-    update_data.pop(
-        "created_by",
-        None,
-    )
-
-    # =====================================================
-    # APPLY UPDATE
-    # =====================================================
+    # Prevent client from altering ownership
+    update_data.pop("created_by", None)
 
     for field, value in update_data.items():
-
         if hasattr(patient, field):
-
-            setattr(
-                patient,
-                field,
-                value,
-            )
-
-    # =====================================================
-    # SAVE UPDATE
-    # =====================================================
+            setattr(patient, field, value)
 
     try:
         db.commit()
         db.refresh(patient)
 
+        security_audit.log_resource_access(
+            event_type="PATIENT_UPDATE",
+            user_id=current_user.id,
+            resource_type="patient",
+            resource_id=patient.patient_id,
+            request=request,
+            details={"updated_fields": list(update_data.keys())},
+        )
+
     except Exception:
         db.rollback()
-
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to update patient",

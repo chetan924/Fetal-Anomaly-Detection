@@ -3,12 +3,12 @@ import logging
 import secrets
 from datetime import datetime, timedelta, timezone
 
-
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.api.dependencies import get_current_user
+from app.core.audit_logger import security_audit
 from app.core.config import LOGIN_OTP_ENABLED
 from app.core.email import send_otp_email
 from app.core.security import (
@@ -34,13 +34,12 @@ from app.schemas.user import (
     VerifySignupOTPRequest,
 )
 
-
-
 router = APIRouter(
     prefix="/api/auth",
     tags=["Authentication"],
 )
 
+logger = logging.getLogger(__name__)
 
 OTP_EXPIRE_MINUTES = 10
 OTP_MAX_ATTEMPTS = 5
@@ -52,9 +51,7 @@ def normalize_email(email: str) -> str:
 
 
 def hash_value(value: str) -> str:
-    return hashlib.sha256(
-        value.encode("utf-8")
-    ).hexdigest()
+    return hashlib.sha256(value.encode("utf-8")).hexdigest()
 
 
 def generate_otp() -> str:
@@ -69,12 +66,7 @@ def create_otp_record(
     user_id: int | None = None,
 ) -> tuple[str, OTP]:
     email = normalize_email(email)
-
     now = datetime.now(timezone.utc)
-
-    # --------------------------------------------------------
-    # RATE-LIMIT COOLDOWN (60 seconds)
-    # --------------------------------------------------------
 
     recent_otp = db.scalar(
         select(OTP).where(
@@ -108,18 +100,13 @@ def create_otp_record(
         email=email,
         otp_hash=hash_value(raw_otp),
         purpose=purpose,
-        expires_at=now
-        + timedelta(
-            minutes=OTP_EXPIRE_MINUTES
-        ),
+        expires_at=now + timedelta(minutes=OTP_EXPIRE_MINUTES),
         attempts=0,
     )
 
     db.add(otp)
     db.flush()
-
     return raw_otp, otp
-
 
 
 def verify_otp(
@@ -130,7 +117,6 @@ def verify_otp(
     purpose: str,
 ) -> OTP:
     email = normalize_email(email)
-
     otp = db.scalar(
         select(OTP)
         .where(
@@ -138,9 +124,7 @@ def verify_otp(
             OTP.purpose == purpose,
             OTP.verified_at.is_(None),
         )
-        .order_by(
-            OTP.created_at.desc()
-        )
+        .order_by(OTP.created_at.desc())
     )
 
     if not otp:
@@ -152,146 +136,72 @@ def verify_otp(
     if otp.attempts >= OTP_MAX_ATTEMPTS:
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-            detail=(
-                "Too many incorrect OTP attempts. "
-                "Please request a new OTP."
-            ),
+            detail="Too many incorrect OTP attempts. Please request a new OTP.",
         )
 
     now = datetime.now(timezone.utc)
-
     expires_at = otp.expires_at
 
     if expires_at.tzinfo is None:
-        expires_at = expires_at.replace(
-            tzinfo=timezone.utc
-        )
+        expires_at = expires_at.replace(tzinfo=timezone.utc)
 
     if expires_at <= now:
         otp.verified_at = now
-
         db.add(otp)
         db.commit()
-
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=(
-                "OTP has expired. "
-                "Please request a new OTP."
-            ),
+            detail="OTP has expired. Please request a new OTP.",
         )
 
-    submitted_hash = hash_value(
-        str(otp_value).strip()
-    )
+    submitted_hash = hash_value(str(otp_value).strip())
 
-    if not secrets.compare_digest(
-        otp.otp_hash,
-        submitted_hash,
-    ):
+    if not secrets.compare_digest(otp.otp_hash, submitted_hash):
         otp.attempts += 1
-
         db.add(otp)
         db.commit()
-
-        remaining_attempts = max(
-            0,
-            OTP_MAX_ATTEMPTS - otp.attempts,
-        )
-
+        remaining_attempts = max(0, OTP_MAX_ATTEMPTS - otp.attempts)
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=(
-                "Invalid OTP. "
-                f"{remaining_attempts} attempts remaining."
-            ),
+            detail=f"Invalid OTP. {remaining_attempts} attempts remaining.",
         )
 
     otp.verified_at = now
-
     db.add(otp)
     db.commit()
     db.refresh(otp)
-
     return otp
 
 
-logger = logging.getLogger(__name__)
-
-
-def send_generated_otp_email(
-    *,
-    email: str,
-    otp: str,
-    purpose: str,
-) -> None:
+def send_generated_otp_email(*, email: str, otp: str, purpose: str) -> None:
     try:
-        send_otp_email(
-            to_email=email,
-            otp=otp,
-            purpose=purpose,
-        )
-
+        send_otp_email(to_email=email, otp=otp, purpose=purpose)
     except Exception as exc:
-        logger.error(
-            "Failed to send %s OTP email: %s",
-            purpose,
-            str(exc),
-        )
+        logger.error("Failed to send %s OTP email: %s", purpose, str(exc))
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail=(
-                "Unable to send verification email. "
-                "Please check the email service configuration "
-                "and try again."
-            ),
+            detail="Unable to send verification email. Please check the email service configuration and try again.",
         ) from exc
 
 
-
 def hash_reset_token(token: str) -> str:
-    return hashlib.sha256(
-        token.encode("utf-8")
-    ).hexdigest()
+    return hashlib.sha256(token.encode("utf-8")).hexdigest()
 
 
-def create_reset_token() -> tuple[
-    str,
-    str,
-    datetime,
-]:
+def create_reset_token() -> tuple[str, str, datetime]:
     raw_token = secrets.token_urlsafe(48)
-
-    token_hash = hash_reset_token(
-        raw_token
-    )
-
-    expires_at = (
-        datetime.now(timezone.utc)
-        + timedelta(
-            minutes=RESET_TOKEN_EXPIRE_MINUTES
-        )
-    )
-
-    return (
-        raw_token,
-        token_hash,
-        expires_at,
-    )
+    token_hash = hash_reset_token(raw_token)
+    expires_at = datetime.now(timezone.utc) + timedelta(minutes=RESET_TOKEN_EXPIRE_MINUTES)
+    return raw_token, token_hash, expires_at
 
 
-@router.post(
-    "/register",
-    status_code=status.HTTP_201_CREATED,
-)
+@router.post("/register", status_code=status.HTTP_201_CREATED)
 def register_user(
     payload: UserRegister,
+    request: Request,
     db: Session = Depends(get_db),
 ):
-    email = normalize_email(
-        payload.email
-    )
-
+    email = normalize_email(payload.email)
     full_name = payload.full_name.strip()
 
     if len(full_name) < 2:
@@ -300,20 +210,14 @@ def register_user(
             detail="Full name must contain at least 2 characters.",
         )
 
-    existing_user = db.scalar(
-        select(User).where(
-            User.email == email
-        )
-    )
+    existing_user = db.scalar(select(User).where(User.email == email))
 
     if existing_user:
         if existing_user.is_active:
+            security_audit.log_auth_failure(email, "Account already exists", "AUTH_REGISTER_FAILURE", request=request)
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
-                detail=(
-                    "An account with this email "
-                    "already exists."
-                ),
+                detail="An account with this email already exists.",
             )
         else:
             user = existing_user
@@ -323,9 +227,7 @@ def register_user(
         user = User(
             full_name=full_name,
             email=email,
-            hashed_password=hash_password(
-                payload.password
-            ),
+            hashed_password=hash_password(payload.password),
             role="doctor",
             is_active=False,
         )
@@ -333,26 +235,15 @@ def register_user(
 
     try:
         db.flush()
-
-        raw_otp, _ = create_otp_record(
-            db,
-            email=email,
-            purpose="signup",
-            user_id=user.id,
-        )
-
-        send_generated_otp_email(
-            email=email,
-            otp=raw_otp,
-            purpose="signup",
-        )
-
+        raw_otp, _ = create_otp_record(db, email=email, purpose="signup", user_id=user.id)
+        send_generated_otp_email(email=email, otp=raw_otp, purpose="signup")
         db.commit()
+
+        security_audit.log_auth_success(user.id, email, event_type="AUTH_REGISTER_INITIATED", request=request)
 
     except HTTPException:
         db.rollback()
         raise
-
     except Exception as exc:
         db.rollback()
         raise HTTPException(
@@ -368,23 +259,15 @@ def register_user(
     }
 
 
-@router.post(
-    "/register/send-otp",
-)
-@router.post(
-    "/register/resend-otp",
-)
+@router.post("/register/send-otp")
+@router.post("/register/resend-otp")
 def send_signup_otp(
     payload: ResendOTPRequest,
+    request: Request,
     db: Session = Depends(get_db),
 ):
     email = normalize_email(payload.email)
-
-    user = db.scalar(
-        select(User).where(
-            User.email == email
-        )
-    )
+    user = db.scalar(select(User).where(User.email == email))
 
     if not user:
         raise HTTPException(
@@ -393,30 +276,15 @@ def send_signup_otp(
         )
 
     if user.is_active:
-        return {
-            "message": "Account is already active. You can now log in.",
-        }
+        return {"message": "Account is already active. You can now log in."}
 
     try:
-        raw_otp, _ = create_otp_record(
-            db,
-            email=email,
-            purpose="signup",
-            user_id=user.id,
-        )
-
-        send_generated_otp_email(
-            email=email,
-            otp=raw_otp,
-            purpose="signup",
-        )
-
+        raw_otp, _ = create_otp_record(db, email=email, purpose="signup", user_id=user.id)
+        send_generated_otp_email(email=email, otp=raw_otp, purpose="signup")
         db.commit()
-
     except HTTPException:
         db.rollback()
         raise
-
     except Exception as exc:
         db.rollback()
         raise HTTPException(
@@ -424,28 +292,17 @@ def send_signup_otp(
             detail="Unable to send verification email. Please try again later.",
         ) from exc
 
-    return {
-        "message": "OTP sent to your email.",
-        "expires_in_seconds": OTP_EXPIRE_MINUTES * 60,
-    }
+    return {"message": "OTP sent to your email.", "expires_in_seconds": OTP_EXPIRE_MINUTES * 60}
 
 
-@router.post(
-    "/register/verify-otp",
-)
+@router.post("/register/verify-otp")
 def verify_signup_otp(
     payload: VerifySignupOTPRequest,
+    request: Request,
     db: Session = Depends(get_db),
 ):
-    email = normalize_email(
-        payload.email
-    )
-
-    user = db.scalar(
-        select(User).where(
-            User.email == email
-        )
-    )
+    email = normalize_email(payload.email)
+    user = db.scalar(select(User).where(User.email == email))
 
     if not user:
         raise HTTPException(
@@ -454,78 +311,47 @@ def verify_signup_otp(
         )
 
     if user.is_active:
-        return {
-            "message": "Signup email verified successfully. You can now log in.",
-        }
+        return {"message": "Signup email verified successfully. You can now log in."}
 
-    verify_otp(
-        db,
-        email=email,
-        otp_value=payload.otp,
-        purpose="signup",
-    )
-
+    verify_otp(db, email=email, otp_value=payload.otp, purpose="signup")
     user.is_active = True
     db.add(user)
     db.commit()
 
-    return {
-        "message": "Signup email verified successfully. You can now log in.",
-    }
+    security_audit.log_auth_success(user.id, email, event_type="AUTH_REGISTER_SUCCESS", request=request)
+    return {"message": "Signup email verified successfully. You can now log in."}
 
 
-@router.post(
-    "/login",
-)
+@router.post("/login")
 def login_user(
     payload: UserLogin,
+    request: Request,
     db: Session = Depends(get_db),
 ):
-    email = normalize_email(
-        payload.email
-    )
+    email = normalize_email(payload.email)
+    user = db.scalar(select(User).where(User.email == email))
 
-    user = db.scalar(
-        select(User).where(
-            User.email == email
-        )
-    )
-
-    if not user or not verify_password(
-        payload.password,
-        user.hashed_password,
-    ):
+    if not user or not verify_password(payload.password, user.hashed_password):
+        security_audit.log_auth_failure(email, "Invalid email or password", "AUTH_LOGIN_FAILURE", request=request)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Email/password is incorrect.",
         )
 
     if not user.is_active:
+        security_audit.log_auth_failure(email, "Account inactive", "AUTH_LOGIN_FAILURE", request=request)
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="User account is inactive. Please verify your OTP.",
         )
 
     try:
-        raw_otp, _ = create_otp_record(
-            db,
-            email=email,
-            purpose="login",
-            user_id=user.id,
-        )
-
-        send_generated_otp_email(
-            email=email,
-            otp=raw_otp,
-            purpose="login",
-        )
-
+        raw_otp, _ = create_otp_record(db, email=email, purpose="login", user_id=user.id)
+        send_generated_otp_email(email=email, otp=raw_otp, purpose="login")
         db.commit()
-
     except HTTPException:
         db.rollback()
         raise
-
     except Exception as exc:
         db.rollback()
         raise HTTPException(
@@ -540,20 +366,14 @@ def login_user(
     }
 
 
-@router.post(
-    "/login/resend-otp",
-)
+@router.post("/login/resend-otp")
 def resend_login_otp(
     payload: ResendOTPRequest,
+    request: Request,
     db: Session = Depends(get_db),
 ):
     email = normalize_email(payload.email)
-
-    user = db.scalar(
-        select(User).where(
-            User.email == email
-        )
-    )
+    user = db.scalar(select(User).where(User.email == email))
 
     if not user or not user.is_active:
         raise HTTPException(
@@ -562,25 +382,12 @@ def resend_login_otp(
         )
 
     try:
-        raw_otp, _ = create_otp_record(
-            db,
-            email=email,
-            purpose="login",
-            user_id=user.id,
-        )
-
-        send_generated_otp_email(
-            email=email,
-            otp=raw_otp,
-            purpose="login",
-        )
-
+        raw_otp, _ = create_otp_record(db, email=email, purpose="login", user_id=user.id)
+        send_generated_otp_email(email=email, otp=raw_otp, purpose="login")
         db.commit()
-
     except HTTPException:
         db.rollback()
         raise
-
     except Exception as exc:
         db.rollback()
         raise HTTPException(
@@ -588,114 +395,43 @@ def resend_login_otp(
             detail="Unable to send verification email. Please try again later.",
         ) from exc
 
-    return {
-        "message": "OTP sent to your email.",
-        "expires_in_seconds": OTP_EXPIRE_MINUTES * 60,
-    }
+    return {"message": "OTP sent to your email.", "expires_in_seconds": OTP_EXPIRE_MINUTES * 60}
 
 
-@router.post(
-    "/forgot-password/resend-otp",
-)
-def resend_forgot_password_otp(
-    payload: ResendOTPRequest,
+@router.post("/login/verify-otp", response_model=TokenResponse)
+def verify_login_otp(
+    payload: VerifyLoginOTPRequest,
+    request: Request,
     db: Session = Depends(get_db),
 ):
     email = normalize_email(payload.email)
-
-    user = db.scalar(
-        select(User).where(
-            User.email == email
-        )
-    )
-
-    generic_message = "If an account exists for this email, a password reset OTP has been sent."
-
-    if not user or not user.is_active:
-        return {
-            "message": generic_message,
-        }
-
-    try:
-        raw_otp, _ = create_otp_record(
-            db,
-            email=email,
-            purpose="forgot_password",
-            user_id=user.id,
-        )
-
-        send_generated_otp_email(
-            email=email,
-            otp=raw_otp,
-            purpose="password_reset",
-        )
-
-        db.commit()
-
-    except HTTPException:
-        db.rollback()
-        raise
-
-    except Exception:
-        db.rollback()
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Unable to send password reset email. Please try again later.",
-        )
-
-    return {
-        "message": generic_message,
-        "expires_in_seconds": OTP_EXPIRE_MINUTES * 60,
-    }
-
-
-
-@router.post(
-    "/login/verify-otp",
-    response_model=TokenResponse,
-)
-def verify_login_otp(
-    payload: VerifyLoginOTPRequest,
-    db: Session = Depends(get_db),
-):
-    email = normalize_email(
-        payload.email
-    )
-
-    user = db.scalar(
-        select(User).where(
-            User.email == email
-        )
-    )
+    user = db.scalar(select(User).where(User.email == email))
 
     if not user:
+        security_audit.log_auth_failure(email, "User not found", "AUTH_LOGIN_FAILURE", request=request)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid authentication request.",
         )
 
     if not user.is_active:
+        security_audit.log_auth_failure(email, "Inactive user", "AUTH_LOGIN_FAILURE", request=request)
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="User account is inactive.",
         )
 
-    otp = verify_otp(
-        db,
-        email=email,
-        otp_value=payload.otp,
-        purpose="login",
-    )
+    otp = verify_otp(db, email=email, otp_value=payload.otp, purpose="login")
 
     if otp.user_id != user.id:
+        security_audit.log_auth_failure(email, "OTP mismatch", "AUTH_LOGIN_FAILURE", request=request)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid authentication request.",
         )
 
-    access_token = create_access_token(
-        str(user.id)
-    )
+    access_token = create_access_token(str(user.id))
+    security_audit.log_auth_success(user.id, email, event_type="AUTH_LOGIN_SUCCESS", request=request)
 
     return {
         "access_token": access_token,
@@ -703,101 +439,79 @@ def verify_login_otp(
     }
 
 
-@router.get(
-    "/me",
-    response_model=UserResponse,
-)
-def get_me(
-    current_user: User = Depends(
-        get_current_user
-    ),
-):
+@router.get("/me", response_model=UserResponse)
+def get_me(current_user: User = Depends(get_current_user)):
     return current_user
 
 
-@router.post(
-    "/forgot-password",
-)
+@router.post("/forgot-password")
 def forgot_password(
     payload: ForgotPasswordRequest,
+    request: Request,
     db: Session = Depends(get_db),
 ):
-    email = normalize_email(
-        payload.email
-    )
-
-    user = db.scalar(
-        select(User).where(
-            User.email == email
-        )
-    )
-
-    generic_message = (
-        "If an account exists for this email, "
-        "a password reset OTP has been sent."
-    )
+    email = normalize_email(payload.email)
+    user = db.scalar(select(User).where(User.email == email))
+    generic_message = "If an account exists for this email, a password reset OTP has been sent."
 
     if not user or not user.is_active:
-        return {
-            "message": generic_message,
-        }
+        return {"message": generic_message}
 
     try:
-        raw_otp, _ = create_otp_record(
-            db,
-            email=email,
-            purpose="forgot_password",
-            user_id=user.id,
-        )
-
-        send_generated_otp_email(
-            email=email,
-            otp=raw_otp,
-            purpose="password_reset",
-        )
-
+        raw_otp, _ = create_otp_record(db, email=email, purpose="forgot_password", user_id=user.id)
+        send_generated_otp_email(email=email, otp=raw_otp, purpose="password_reset")
         db.commit()
-
     except HTTPException:
         db.rollback()
         raise
-
     except Exception:
         db.rollback()
-
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail=(
-                "Unable to send password reset email. "
-                "Please try again later."
-            ),
+            detail="Unable to send password reset email. Please try again later.",
         )
 
-    return {
-        "message": generic_message,
-        "otp_required": True,
-        "expires_in_seconds": (
-            OTP_EXPIRE_MINUTES * 60
-        ),
-    }
+    return {"message": generic_message, "otp_required": True, "expires_in_seconds": OTP_EXPIRE_MINUTES * 60}
 
 
-@router.post(
-    "/forgot-password/verify-otp",
-)
-def verify_forgot_password_otp(
-    payload: VerifyForgotPasswordOTPRequest,
+@router.post("/forgot-password/resend-otp")
+def resend_forgot_password_otp(
+    payload: ResendOTPRequest,
+    request: Request,
     db: Session = Depends(get_db),
 ):
-    email = normalize_email(
-        payload.email
-    )
+    email = normalize_email(payload.email)
+    user = db.scalar(select(User).where(User.email == email))
+    generic_message = "If an account exists for this email, a password reset OTP has been sent."
 
-    user = db.scalar(
-        select(User).where(
-            User.email == email
+    if not user or not user.is_active:
+        return {"message": generic_message}
+
+    try:
+        raw_otp, _ = create_otp_record(db, email=email, purpose="forgot_password", user_id=user.id)
+        send_generated_otp_email(email=email, otp=raw_otp, purpose="password_reset")
+        db.commit()
+    except HTTPException:
+        db.rollback()
+        raise
+    except Exception:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Unable to send password reset email. Please try again later.",
         )
-    )
+
+    return {"message": generic_message, "expires_in_seconds": OTP_EXPIRE_MINUTES * 60}
+
+
+@router.post("/forgot-password/verify-otp")
+def verify_forgot_password_otp(
+    payload: VerifyForgotPasswordOTPRequest,
+    request: Request,
+    db: Session = Depends(get_db),
+):
+    email = normalize_email(payload.email)
+    user = db.scalar(select(User).where(User.email == email))
 
     if not user or not user.is_active:
         raise HTTPException(
@@ -805,140 +519,78 @@ def verify_forgot_password_otp(
             detail="Invalid or expired OTP.",
         )
 
-    verify_otp(
-        db,
-        email=email,
-        otp_value=payload.otp,
-        purpose="forgot_password",
-    )
-
-    (
-        raw_token,
-        token_hash,
-        expires_at,
-    ) = create_reset_token()
-
+    verify_otp(db, email=email, otp_value=payload.otp, purpose="forgot_password")
+    raw_token, token_hash, expires_at = create_reset_token()
     user.reset_token_hash = token_hash
     user.reset_token_expires_at = expires_at
 
     try:
         db.add(user)
         db.commit()
-
     except Exception:
         db.rollback()
         raise
 
     return {
-        "message": (
-            "OTP verified successfully. "
-            "You can now reset your password."
-        ),
+        "message": "OTP verified successfully. You can now reset your password.",
         "reset_token": raw_token,
-        "expires_in_minutes": (
-            RESET_TOKEN_EXPIRE_MINUTES
-        ),
+        "expires_in_minutes": RESET_TOKEN_EXPIRE_MINUTES,
     }
 
 
-@router.post(
-    "/reset-password",
-)
+@router.post("/reset-password")
 def reset_password(
     payload: ResetPasswordRequest,
+    request: Request,
     db: Session = Depends(get_db),
 ):
-    token_hash = hash_reset_token(
-        payload.token
-    )
+    token_hash = hash_reset_token(payload.token)
+    user = db.scalar(select(User).where(User.reset_token_hash == token_hash))
 
-    user = db.scalar(
-        select(User).where(
-            User.reset_token_hash == token_hash
-        )
-    )
-
-    if not user:
+    if not user or not user.reset_token_expires_at:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=(
-                "Invalid or expired "
-                "password reset token."
-            ),
-        )
-
-    if not user.reset_token_expires_at:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=(
-                "Invalid or expired "
-                "password reset token."
-            ),
+            detail="Invalid or expired password reset token.",
         )
 
     now = datetime.now(timezone.utc)
-
     expires_at = user.reset_token_expires_at
-
     if expires_at.tzinfo is None:
-        expires_at = expires_at.replace(
-            tzinfo=timezone.utc
-        )
+        expires_at = expires_at.replace(tzinfo=timezone.utc)
 
     if expires_at <= now:
         user.reset_token_hash = None
         user.reset_token_expires_at = None
-
         db.add(user)
         db.commit()
-
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=(
-                "Invalid or expired "
-                "password reset token."
-            ),
+            detail="Invalid or expired password reset token.",
         )
 
-    user.hashed_password = hash_password(
-        payload.new_password
-    )
-
+    user.hashed_password = hash_password(payload.new_password)
     user.reset_token_hash = None
     user.reset_token_expires_at = None
 
     try:
         db.add(user)
         db.commit()
-
+        security_audit.log_auth_success(user.id, user.email, "AUTH_PASSWORD_RESET", request=request)
     except Exception:
         db.rollback()
         raise
 
-    return {
-        "message": (
-            "Password reset successfully. "
-            "You can now log in."
-        ),
-    }
+    return {"message": "Password reset successfully. You can now log in."}
 
 
-@router.post(
-    "/reset-password-with-otp",
-)
+@router.post("/reset-password-with-otp")
 def reset_password_with_otp(
     payload: ResetPasswordWithOTPRequest,
+    request: Request,
     db: Session = Depends(get_db),
 ):
-    email = normalize_email(
-        payload.email
-    )
-
-    user = db.scalar(
-        select(User).where(
-            User.email == email
-        )
-    )
+    email = normalize_email(payload.email)
+    user = db.scalar(select(User).where(User.email == email))
 
     if not user or not user.is_active:
         raise HTTPException(
@@ -946,84 +598,52 @@ def reset_password_with_otp(
             detail="Invalid or expired OTP.",
         )
 
-    verify_otp(
-        db,
-        email=email,
-        otp_value=payload.otp,
-        purpose="forgot_password",
-    )
-
-    user.hashed_password = hash_password(
-        payload.new_password
-    )
-
+    verify_otp(db, email=email, otp_value=payload.otp, purpose="forgot_password")
+    user.hashed_password = hash_password(payload.new_password)
     user.reset_token_hash = None
     user.reset_token_expires_at = None
 
     try:
         db.add(user)
         db.commit()
-
+        security_audit.log_auth_success(user.id, user.email, "AUTH_PASSWORD_RESET", request=request)
     except Exception:
         db.rollback()
         raise
 
-    return {
-        "message": (
-            "Password reset successfully. "
-            "You can now log in."
-        ),
-    }
+    return {"message": "Password reset successfully. You can now log in."}
 
 
-@router.post(
-    "/change-password",
-)
+@router.post("/change-password")
 def change_password(
     payload: ChangePasswordRequest,
-    current_user: User = Depends(
-        get_current_user
-    ),
+    request: Request,
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    if not verify_password(
-        payload.current_password,
-        current_user.hashed_password,
-    ):
+    if not verify_password(payload.current_password, current_user.hashed_password):
+        security_audit.log_auth_failure(current_user.email, "Incorrect current password", "AUTH_PASSWORD_CHANGE_FAILURE", request=request)
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Current password is incorrect",
         )
 
-    if verify_password(
-        payload.new_password,
-        current_user.hashed_password,
-    ):
+    if verify_password(payload.new_password, current_user.hashed_password):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=(
-                "New password must be different "
-                "from the current password"
-            ),
+            detail="New password must be different from the current password",
         )
 
-    current_user.hashed_password = hash_password(
-        payload.new_password
-    )
-
+    current_user.hashed_password = hash_password(payload.new_password)
     current_user.reset_token_hash = None
     current_user.reset_token_expires_at = None
 
     try:
         db.add(current_user)
         db.commit()
-
+        security_audit.log_auth_success(current_user.id, current_user.email, "AUTH_PASSWORD_CHANGE", request=request)
     except Exception:
         db.rollback()
         raise
 
-    return {
-        "message": (
-            "Password changed successfully."
-        ),
-    }
+    return {"message": "Password changed successfully."}

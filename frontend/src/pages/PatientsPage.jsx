@@ -855,20 +855,39 @@ function PatientsPage() {
             </div>
 
 
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={
-                handleClosePatient
-              }
-            >
-              <X
-                size={16}
-                className="mr-2"
-              />
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                variant="primary"
+                onClick={() =>
+                  navigate(
+                    `/scans/new?patient=${encodeURIComponent(
+                      selectedPatient.patient_id
+                    )}`
+                  )
+                }
+              >
+                <Plus
+                  size={16}
+                  className="mr-2"
+                />
+                New Scan
+              </Button>
 
-              Close
-            </Button>
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={
+                  handleClosePatient
+                }
+              >
+                <X
+                  size={16}
+                  className="mr-2"
+                />
+                Close
+              </Button>
+            </div>
 
           </div>
 
@@ -1087,6 +1106,18 @@ function PatientsPage() {
                     const screeningStatus =
                       outlier?.status ||
                       'Not available';
+
+                    const isOutlier =
+                      scan.is_outlier === true ||
+                      outlier?.is_outlier === true ||
+                      outlier?.status === 'Outlier' ||
+                      outlier?.status === 'Unusual / Outlier';
+
+                    const analysisComplete = Boolean(
+                      scan.predicted_plane ||
+                      scan.analysis_result ||
+                      scan.analysis
+                    );
 
                     return (
                       <div
